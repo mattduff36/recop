@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync } from 'fs';
-import { dirname, isAbsolute, resolve } from 'path';
+import { dirname, isAbsolute, resolve, sep } from 'path';
 import { spawn } from 'child_process';
 import { config } from 'dotenv';
 
@@ -42,7 +42,17 @@ function assertSnapshotAllowed(mode: SnapshotMode): { connectionString: string; 
   }
 
   const snapshotPath = resolve(snapshotPathRaw);
-  if (snapshotPath.startsWith(resolve(process.cwd()))) {
+  const repoRoot = resolve(process.cwd());
+  const repoRootWithSeparator = repoRoot.endsWith(sep) ? repoRoot : `${repoRoot}${sep}`;
+  const comparableSnapshotPath = process.platform === 'win32' ? snapshotPath.toLowerCase() : snapshotPath;
+  const comparableRepoRoot = process.platform === 'win32' ? repoRoot.toLowerCase() : repoRoot;
+  const comparableRepoRootWithSeparator =
+    process.platform === 'win32' ? repoRootWithSeparator.toLowerCase() : repoRootWithSeparator;
+
+  if (
+    comparableSnapshotPath === comparableRepoRoot ||
+    comparableSnapshotPath.startsWith(comparableRepoRootWithSeparator)
+  ) {
     throw new Error('DEMO_SNAPSHOT_PATH must be outside the repository so approved demo snapshots are never committed.');
   }
 
