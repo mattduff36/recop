@@ -471,27 +471,20 @@ function resolveCandidateUrl(value: string | null, baseUrl: string): string | nu
 }
 
 function getLogoCandidatesFromHtml(html: string, pageUrl: string): string[] {
-  const candidates: string[] = [];
-  const addCandidate = (value: string | null) => {
+  const primaryCandidates: string[] = [];
+  const fallbackCandidates: string[] = [];
+  const addCandidate = (value: string | null, candidates: string[]) => {
     const candidate = resolveCandidateUrl(value, pageUrl);
     if (candidate && !candidates.includes(candidate)) {
       candidates.push(candidate);
     }
   };
 
-  for (const match of html.matchAll(/<link\b[^>]*>/giu)) {
-    const tag = match[0];
-    const rel = getTagAttribute(tag, 'rel')?.toLowerCase() || '';
-    if (rel.includes('icon')) {
-      addCandidate(getTagAttribute(tag, 'href'));
-    }
-  }
-
   for (const match of html.matchAll(/<meta\b[^>]*>/giu)) {
     const tag = match[0];
     const property = getTagAttribute(tag, 'property')?.toLowerCase() || getTagAttribute(tag, 'name')?.toLowerCase() || '';
     if (property === 'og:image' || property === 'twitter:image') {
-      addCandidate(getTagAttribute(tag, 'content'));
+      addCandidate(getTagAttribute(tag, 'content'), primaryCandidates);
     }
   }
 
@@ -499,11 +492,19 @@ function getLogoCandidatesFromHtml(html: string, pageUrl: string): string[] {
     const tag = match[0];
     const descriptor = `${getTagAttribute(tag, 'alt') || ''} ${getTagAttribute(tag, 'class') || ''} ${getTagAttribute(tag, 'id') || ''}`;
     if (/logo|brand/iu.test(descriptor)) {
-      addCandidate(getTagAttribute(tag, 'src') || getTagAttribute(tag, 'data-src'));
+      addCandidate(getTagAttribute(tag, 'src') || getTagAttribute(tag, 'data-src'), primaryCandidates);
     }
   }
 
-  return candidates;
+  for (const match of html.matchAll(/<link\b[^>]*>/giu)) {
+    const tag = match[0];
+    const rel = getTagAttribute(tag, 'rel')?.toLowerCase() || '';
+    if (rel.includes('icon')) {
+      addCandidate(getTagAttribute(tag, 'href'), fallbackCandidates);
+    }
+  }
+
+  return [...primaryCandidates, ...fallbackCandidates];
 }
 
 async function fetchImageCandidate(candidateUrl: string): Promise<ImageBuffer | null> {
@@ -514,7 +515,7 @@ async function fetchImageCandidate(candidateUrl: string): Promise<ImageBuffer | 
     }
 
     const contentType = response.headers.get('content-type') || '';
-    if (!/image\/(png|jpe?g|webp|svg\+xml|x-icon|vnd\.microsoft\.icon)/iu.test(contentType)) {
+    if (!/image\/(png|jpe?g|webp|svg\+xml)/iu.test(contentType)) {
       return null;
     }
 
@@ -905,11 +906,9 @@ ${recommendations}
 ${answersMarkdown}
 
 ## Optional Deeper Personalisation Checklist
-- Review \`lib/config/template-config.ts\` for app/company naming and demo persona copy.
 - Review \`scripts/demo/seed.ts\` if fictional teams, users, assets, projects, or customers should be made more relevant.
-- Review \`lib/config/navigation.ts\` and \`lib/config/forms.ts\` if module labels need prospect-specific wording.
-- Review public logo, favicon, and \`public/manifest.json\` if a stronger branded preview is needed.
-- Review PDF/email surfaces for requested output personalisation.
+- Review \`lib/config/forms.ts\` if module labels need prospect-specific wording.
+- Review email surfaces if requested output personalisation should go beyond PDFs.
 `;
 }
 
