@@ -78,7 +78,7 @@ function DashboardLayoutShell({
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { profile, loading: authLoading, locked } = useAuth();
+  const { profile, loading: authLoading, locked, isManager, isAdmin, isActualSuperAdmin } = useAuth();
   const clientServiceOutage = useClientServiceOutage();
   const { tabletModeEnabled, tabletModeInfoOpen, dismissTabletModeInfo } = useTabletMode();
   const lastTrackedPathRef = useRef<string>('');
@@ -176,6 +176,7 @@ function DashboardLayoutShell({
   
   // Determine the accent color based on current route
   const accent = getAccentFromRoute(pathname, searchParams);
+  const shouldApplySidebarOffset = !tabletModeEnabled && (isManager || isAdmin || isActualSuperAdmin);
 
   useEffect(() => {
     const nextPath = getCurrentTrackedPath();
@@ -238,7 +239,9 @@ function DashboardLayoutShell({
       <MessageBlockingCheck />
       
       <Navbar />
-      <DemoBranchNotice className="mx-4 mt-4 sm:mx-6 lg:mx-8" />
+      <div className={`transition-all duration-300 ${shouldApplySidebarOffset ? 'md:pl-16' : ''}`}>
+        <DemoBranchNotice centered className="mx-4 mt-4 sm:mx-6 lg:mx-8" />
+      </div>
       <PullToRefresh />
       <DashboardContent>
         {children}

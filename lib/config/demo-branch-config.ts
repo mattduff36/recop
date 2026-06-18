@@ -8,6 +8,7 @@ export interface DemoBranchConfig {
   branding: DemoBranchBrandingConfig | null;
   navigationPriorityHrefs: string[];
   pdf: DemoBranchPdfConfig | null;
+  welcome: DemoBranchWelcomeConfig | null;
 }
 
 export interface DemoBranchBrandingConfig {
@@ -29,6 +30,19 @@ export interface DemoBranchPdfConfig {
   registrationLine: string;
 }
 
+export interface DemoBranchWelcomeConfig {
+  companyDisplayName: string;
+  industryLabel: string | null;
+  operatingRegion: string | null;
+  companySizeLabel: string | null;
+  primaryDemoObjectiveLabel: string | null;
+  priorityModuleLabels: string[];
+  painPointLabels: string[];
+  teamLabels: string[];
+  assetLabels: string[];
+  documentOutputLabels: string[];
+}
+
 export const demoBranchConfig: DemoBranchConfig = {
   enabled: false,
   submissionNumber: null,
@@ -39,4 +53,5 @@ export const demoBranchConfig: DemoBranchConfig = {
   branding: null,
   navigationPriorityHrefs: [],
   pdf: null,
+  welcome: null,
 };

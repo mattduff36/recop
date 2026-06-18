@@ -4,6 +4,7 @@ import path from 'path';
 import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import {
+  getQuestionnaireQuestion,
   getQuestionOptionLabel,
   questionnaireSections,
   type QuestionnaireAnswerValue,
@@ -76,10 +77,24 @@ interface DemoBranchPdf {
   registrationLine: string;
 }
 
+interface DemoBranchWelcome {
+  companyDisplayName: string;
+  industryLabel: string | null;
+  operatingRegion: string | null;
+  companySizeLabel: string | null;
+  primaryDemoObjectiveLabel: string | null;
+  priorityModuleLabels: string[];
+  painPointLabels: string[];
+  teamLabels: string[];
+  assetLabels: string[];
+  documentOutputLabels: string[];
+}
+
 interface DemoPersonalisation {
   branding: DemoBranchBranding;
   navigationPriorityHrefs: string[];
   pdf: DemoBranchPdf;
+  welcome: DemoBranchWelcome;
   assetNote: string;
 }
 
@@ -638,6 +653,41 @@ function buildPdfConfig(profile: ClientProfile): DemoBranchPdf {
   };
 }
 
+function getSingleChoiceAnswerLabel(answers: QuestionnaireAnswers, questionId: string): string | null {
+  const value = getStringAnswer(answers, questionId);
+  const question = getQuestionnaireQuestion(questionId);
+  if (!value || !question) {
+    return null;
+  }
+
+  return question.type === 'single_choice' ? getQuestionOptionLabel(question, value) : value;
+}
+
+function getMultiChoiceAnswerLabels(answers: QuestionnaireAnswers, questionId: string): string[] {
+  const value = getStringArrayAnswer(answers, questionId);
+  const question = getQuestionnaireQuestion(questionId);
+  if (!question || value.length === 0) {
+    return [];
+  }
+
+  return value.map((optionId) => getQuestionOptionLabel(question, optionId));
+}
+
+function buildWelcomeConfig(profile: ClientProfile): DemoBranchWelcome {
+  return {
+    companyDisplayName: getShortCompanyName(profile.submission.company_name),
+    industryLabel: getSingleChoiceAnswerLabel(profile.answers, 'industry_sector'),
+    operatingRegion: getStringAnswer(profile.answers, 'operating_region') || null,
+    companySizeLabel: getSingleChoiceAnswerLabel(profile.answers, 'company_size'),
+    primaryDemoObjectiveLabel: getSingleChoiceAnswerLabel(profile.answers, 'primary_demo_objective'),
+    priorityModuleLabels: getMultiChoiceAnswerLabels(profile.answers, 'priority_modules'),
+    painPointLabels: getMultiChoiceAnswerLabels(profile.answers, 'biggest_pain_points'),
+    teamLabels: getMultiChoiceAnswerLabels(profile.answers, 'teams_to_reflect'),
+    assetLabels: getMultiChoiceAnswerLabels(profile.answers, 'asset_mix'),
+    documentOutputLabels: getMultiChoiceAnswerLabels(profile.answers, 'document_outputs'),
+  };
+}
+
 async function buildDemoPersonalisation(profile: ClientProfile): Promise<DemoPersonalisation> {
   const colours = resolveBrandColours(profile.answers);
   const appNames = buildAppNames(profile);
@@ -660,6 +710,7 @@ async function buildDemoPersonalisation(profile: ClientProfile): Promise<DemoPer
     },
     navigationPriorityHrefs: buildNavigationPriorityHrefs(profile.answers),
     pdf: buildPdfConfig(profile),
+    welcome: buildWelcomeConfig(profile),
     assetNote: brandAssets.note,
   };
 }
@@ -791,6 +842,7 @@ function buildConfigFile(profile: ClientProfile, personalisation: DemoPersonalis
   branding: DemoBranchBrandingConfig | null;
   navigationPriorityHrefs: string[];
   pdf: DemoBranchPdfConfig | null;
+  welcome: DemoBranchWelcomeConfig | null;
 }
 
 export interface DemoBranchBrandingConfig {
@@ -812,6 +864,19 @@ export interface DemoBranchPdfConfig {
   registrationLine: string;
 }
 
+export interface DemoBranchWelcomeConfig {
+  companyDisplayName: string;
+  industryLabel: string | null;
+  operatingRegion: string | null;
+  companySizeLabel: string | null;
+  primaryDemoObjectiveLabel: string | null;
+  priorityModuleLabels: string[];
+  painPointLabels: string[];
+  teamLabels: string[];
+  assetLabels: string[];
+  documentOutputLabels: string[];
+}
+
 export const demoBranchConfig: DemoBranchConfig = {
   enabled: true,
   submissionNumber: ${profile.submission.submission_number},
@@ -822,6 +887,7 @@ export const demoBranchConfig: DemoBranchConfig = {
   branding: ${JSON.stringify(personalisation.branding, null, 2)},
   navigationPriorityHrefs: ${JSON.stringify(personalisation.navigationPriorityHrefs, null, 2)},
   pdf: ${JSON.stringify(personalisation.pdf, null, 2)},
+  welcome: ${JSON.stringify(personalisation.welcome, null, 2)},
 };
 `;
 }
@@ -887,7 +953,7 @@ Generated from questionnaire submission #${profile.submission.submission_number}
 - Submitted: ${profile.submission.created_at}
 
 ## Important Demo Data Note
-This personalised branch uses the shared fictional sample database. Names, records, vehicles, documents, and activity inside the app are demo data only.
+This demo uses shared sample data. Feel free to add your own data, but be aware everything added may be visible on other DigiDocs demo sites.
 
 ## Deterministic Changes Applied
 - Enabled the demo branch notice for ${profile.submission.company_name}.
@@ -896,6 +962,7 @@ This personalised branch uses the shared fictional sample database. Names, recor
 - Updated logo, favicon, and PWA manifest assets. ${personalisation.assetNote}
 - Reordered navigation priorities: ${personalisation.navigationPriorityHrefs.length > 0 ? personalisation.navigationPriorityHrefs.join(', ') : 'No priority modules selected'}.
 - Personalised timesheet and inspection/defect PDF headers with the customer company, contact line, and brand colour.
+- Added a browser-session welcome modal with safe, personalised demo context.
 - Generated this branch-local personalisation brief.
 - Stored a redacted operational submission export beside this brief.
 

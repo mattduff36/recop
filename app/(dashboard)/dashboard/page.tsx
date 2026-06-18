@@ -8,6 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppPageShell } from '@/components/layout/AppPageShell';
 import { TabletModeToggleActions } from '@/components/layout/TabletModeToggleActions';
 import { useTabletMode } from '@/components/layout/tablet-mode-context';
+import { PersonalisedDemoWelcomeModal } from '@/components/demo/PersonalisedDemoWelcomeModal';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -358,6 +359,7 @@ export default function DashboardPage() {
 
   return (
     <AppPageShell className="space-y-8">
+      <PersonalisedDemoWelcomeModal />
       
       {!tabletModeEnabled && (
         <div className="bg-slate-900 rounded-lg p-4 md:p-5 border border-slate-700 relative overflow-hidden">

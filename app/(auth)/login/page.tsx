@@ -16,18 +16,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { DemoBranchNotice } from '@/components/demo/DemoBranchNotice';
+import { demoSharedDataNoticeText } from '@/components/demo/DemoBranchNotice';
 import {
   ArrowRight,
   ArrowUpRight,
   Briefcase,
   HardHat,
+  Info,
   MousePointerClick,
   User,
   UserCog,
   Users,
   X,
 } from 'lucide-react';
+import { demoBranchConfig } from '@/lib/config/demo-branch-config';
 import { getDemoPersonas, templateConfig, type DemoPersona } from '@/lib/config/template-config';
 import { cn } from '@/lib/utils';
 
@@ -81,6 +83,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [personaDrawerOpen, setPersonaDrawerOpen] = useState(false);
   const demoPersonas = getDemoPersonas();
+  const personalisedDemoCompanyName = demoBranchConfig.enabled ? demoBranchConfig.companyName : null;
+  const isPersonalisedDemo = templateConfig.isDemoMode && Boolean(personalisedDemoCompanyName);
 
   useEffect(() => {
     const savedPreference = localStorage.getItem('rememberMe');
@@ -176,14 +180,18 @@ export default function LoginPage() {
               <p className="text-sm text-muted-foreground">
                 Demonstration environment with fictional data only
               </p>
-              <DemoBranchNotice compact className="mx-auto mt-4 max-w-sm" />
               <motion.button
                 type="button"
                 onClick={() => setPersonaDrawerOpen(true)}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35, duration: 0.4 }}
-                className="mt-4 inline-flex max-w-sm items-center justify-center gap-3 rounded-full border border-brand-yellow/40 bg-brand-yellow/10 px-5 py-2.5 text-center text-sm font-medium text-brand-yellow shadow-lg shadow-brand-yellow/10 transition-colors hover:border-brand-yellow/70 hover:bg-brand-yellow/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className={cn(
+                  'mt-4 inline-flex max-w-sm border border-brand-yellow/40 bg-brand-yellow/10 text-sm font-medium text-brand-yellow shadow-lg shadow-brand-yellow/10 transition-colors hover:border-brand-yellow/70 hover:bg-brand-yellow/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950',
+                  isPersonalisedDemo
+                    ? 'items-start gap-3 rounded-2xl px-4 py-3 text-left'
+                    : 'items-center justify-center gap-3 rounded-full px-5 py-2.5 text-center'
+                )}
               >
                 <motion.span
                   className="shrink-0"
@@ -191,12 +199,26 @@ export default function LoginPage() {
                   transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
                   aria-hidden="true"
                 >
-                  <MousePointerClick className="h-5 w-5" />
+                  {isPersonalisedDemo ? <Info className="h-5 w-5" /> : <MousePointerClick className="h-5 w-5" />}
                 </motion.span>
-                <span>
-                  Trying the demo? Click the glowing button in the top-right corner to sign in
-                  instantly as a demo persona.
-                </span>
+                {isPersonalisedDemo ? (
+                  <span className="space-y-1">
+                    <span className="block font-semibold text-white">
+                      Personalised demo preview for {personalisedDemoCompanyName}
+                    </span>
+                    <span className="block text-xs leading-5 text-brand-yellow/90">
+                      {demoSharedDataNoticeText}
+                    </span>
+                    <span className="block text-xs leading-5 text-brand-yellow/90">
+                      Click the glowing demo accounts button to sign in instantly as a demo persona.
+                    </span>
+                  </span>
+                ) : (
+                  <span>
+                    Trying the demo? Click the glowing button in the top-right corner to sign in
+                    instantly as a demo persona.
+                  </span>
+                )}
                 <motion.span
                   className="shrink-0"
                   animate={{ x: [0, 4, 0], y: [0, -4, 0] }}
@@ -411,20 +433,22 @@ export default function LoginPage() {
                         })}
                       </div>
 
-                      <motion.div
-                        className="border-t border-border/50 p-6 text-center sm:rounded-b-2xl"
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                      >
-                        <Link
-                          href="/questionnaire"
-                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-3 text-sm font-semibold text-brand-yellow transition-colors hover:border-brand-yellow/60 hover:bg-brand-yellow/15 hover:text-brand-yellow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                      {!isPersonalisedDemo && (
+                        <motion.div
+                          className="border-t border-border/50 p-6 text-center sm:rounded-b-2xl"
+                          initial={{ opacity: 0, y: 16 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
                         >
-                          Request a more personal demo site by answering the Questionnaire
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </motion.div>
+                          <Link
+                            href="/questionnaire"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-3 text-sm font-semibold text-brand-yellow transition-colors hover:border-brand-yellow/60 hover:bg-brand-yellow/15 hover:text-brand-yellow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                          >
+                            Request a more personal demo site by answering the Questionnaire
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </motion.div>
+                      )}
                     </motion.div>
                   </DialogPrimitive.Content>
                 </DialogPrimitive.Portal>
@@ -433,22 +457,24 @@ export default function LoginPage() {
           </DialogPrimitive.Root>
 
           {/* Floating questionnaire footer */}
-          <motion.footer
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45, duration: 0.4 }}
-            className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-slate-950/80 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]"
-          >
-            <div className="mx-auto flex w-full max-w-3xl items-center justify-center px-4 py-3">
-              <Link
-                href="/questionnaire"
-                className="inline-flex w-full max-w-xl items-center justify-center gap-2 rounded-lg border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-2.5 text-center text-xs font-semibold text-brand-yellow transition-colors hover:border-brand-yellow/60 hover:bg-brand-yellow/15 hover:text-brand-yellow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 sm:text-sm"
-              >
-                <span>Request a more personal demo site by answering the Questionnaire</span>
-                <ArrowRight className="h-4 w-4 shrink-0" />
-              </Link>
-            </div>
-          </motion.footer>
+          {!isPersonalisedDemo && (
+            <motion.footer
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45, duration: 0.4 }}
+              className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-slate-950/80 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]"
+            >
+              <div className="mx-auto flex w-full max-w-3xl items-center justify-center px-4 py-3">
+                <Link
+                  href="/questionnaire"
+                  className="inline-flex w-full max-w-xl items-center justify-center gap-2 rounded-lg border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-2.5 text-center text-xs font-semibold text-brand-yellow transition-colors hover:border-brand-yellow/60 hover:bg-brand-yellow/15 hover:text-brand-yellow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 sm:text-sm"
+                >
+                  <span>Request a more personal demo site by answering the Questionnaire</span>
+                  <ArrowRight className="h-4 w-4 shrink-0" />
+                </Link>
+              </div>
+            </motion.footer>
+          )}
         </>
       )}
     </div>
