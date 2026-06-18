@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { DemoBranchNotice } from '@/components/demo/DemoBranchNotice';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -168,6 +169,7 @@ export default function LoginPage() {
               <p className="text-sm text-muted-foreground">
                 Demonstration environment with fictional data only
               </p>
+              <DemoBranchNotice compact className="mx-auto mt-4 max-w-sm" />
               <motion.button
                 type="button"
                 onClick={() => setPersonaDrawerOpen(true)}

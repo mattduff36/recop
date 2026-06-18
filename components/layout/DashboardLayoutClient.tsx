@@ -9,6 +9,7 @@ import { MobileNavBar } from '@/components/layout/MobileNavBar';
 import { PullToRefresh } from '@/components/layout/PullToRefresh';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DemoBranchNotice } from '@/components/demo/DemoBranchNotice';
 import { getAccentFromRoute } from '@/lib/theme/getAccentFromRoute';
 import { TabletModeProvider, useTabletMode } from '@/components/layout/tablet-mode-context';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -237,6 +238,7 @@ function DashboardLayoutShell({
       <MessageBlockingCheck />
       
       <Navbar />
+      <DemoBranchNotice className="mx-4 mt-4 sm:mx-6 lg:mx-8" />
       <PullToRefresh />
       <DashboardContent>
         {children}
