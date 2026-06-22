@@ -85,6 +85,9 @@ export default function LoginPage() {
   const demoPersonas = getDemoPersonas();
   const personalisedDemoCompanyName = demoBranchConfig.enabled ? demoBranchConfig.companyName : null;
   const isPersonalisedDemo = templateConfig.isDemoMode && Boolean(personalisedDemoCompanyName);
+  const loginTitle = isPersonalisedDemo
+    ? personalisedDemoCompanyName
+    : templateConfig.branding.shortAppName;
 
   useEffect(() => {
     const savedPreference = localStorage.getItem('rememberMe');
@@ -172,8 +175,8 @@ export default function LoginPage() {
 
         {/* Title */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            {templateConfig.branding.shortAppName.toUpperCase()}
+          <h1 className="text-balance text-4xl font-bold leading-tight text-white mb-2">
+            {loginTitle?.toUpperCase()}
           </h1>
           {templateConfig.isDemoMode && (
             <>
@@ -189,7 +192,7 @@ export default function LoginPage() {
                 className={cn(
                   'mt-4 inline-flex max-w-sm border border-brand-yellow/40 bg-brand-yellow/10 text-sm font-medium text-brand-yellow shadow-lg shadow-brand-yellow/10 transition-colors hover:border-brand-yellow/70 hover:bg-brand-yellow/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950',
                   isPersonalisedDemo
-                    ? 'items-start gap-3 rounded-2xl px-4 py-3 text-left'
+                    ? 'items-center justify-center gap-3 rounded-2xl px-4 py-3 text-center'
                     : 'items-center justify-center gap-3 rounded-full px-5 py-2.5 text-center'
                 )}
               >
@@ -202,14 +205,14 @@ export default function LoginPage() {
                   {isPersonalisedDemo ? <Info className="h-5 w-5" /> : <MousePointerClick className="h-5 w-5" />}
                 </motion.span>
                 {isPersonalisedDemo ? (
-                  <span className="space-y-1">
+                  <span className="space-y-1 text-center">
                     <span className="block font-semibold text-white">
                       Personalised demo preview for {personalisedDemoCompanyName}
                     </span>
-                    <span className="block text-xs leading-5 text-brand-yellow/90">
+                    <span className="block text-xs leading-5 text-slate-300">
                       {demoSharedDataNoticeText}
                     </span>
-                    <span className="block text-xs leading-5 text-brand-yellow/90">
+                    <span className="block text-xs leading-5 text-slate-300">
                       Click the glowing demo accounts button to sign in instantly as a demo persona.
                     </span>
                   </span>
