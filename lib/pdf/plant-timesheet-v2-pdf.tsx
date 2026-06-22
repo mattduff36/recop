@@ -7,14 +7,19 @@ import type { TimesheetOffDayState } from '@/lib/utils/timesheet-off-days';
 import { buildLeaveAwareTotals } from '@/lib/utils/timesheet-leave-totals';
 import { normalizeTimesheetEntriesForDisplay } from '@/lib/utils/plant-timesheet-v2-normalization';
 import { formatEntryJobNumbers } from '@/lib/utils/timesheet-job-codes';
-import { templateConfig } from '@/lib/config/template-config';
-import { getPdfContactLine, getPdfRegisteredOfficeLine } from '@/lib/pdf/branding';
+import {
+  ResPdfFooter,
+  ResPdfHeader,
+  ResPdfMetaGrid,
+  ResPdfSectionTitle,
+} from '@/lib/pdf/res-pdf-components';
+import { resPdfColors } from '@/lib/pdf/res-pdf-theme';
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 24,
-    paddingBottom: 24,
-    paddingHorizontal: 28,
+    paddingTop: 18,
+    paddingBottom: 34,
+    paddingHorizontal: 22,
     fontSize: 9,
     fontFamily: 'Helvetica',
   },
@@ -97,6 +102,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#000',
     minHeight: 26,
+    backgroundColor: resPdfColors.navy,
   },
   tableRow: {
     flexDirection: 'row',
@@ -112,6 +118,9 @@ const styles = StyleSheet.create({
     fontSize: 7,
     textAlign: 'center',
     lineHeight: 1.15,
+    color: resPdfColors.white,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
   cellText: {
     fontSize: 8,
@@ -285,6 +294,7 @@ interface PlantTimesheetV2PDFProps {
   timesheet: Timesheet;
   employeeName?: string | null;
   offDayStates?: TimesheetOffDayState[];
+  logoSrc?: string | null;
 }
 
 function formatHours(value: number | null | undefined): string {
@@ -303,7 +313,12 @@ function formatPlantRemarks(entry: { job_number?: string | null; job_numbers?: s
   return entry.remarks || '';
 }
 
-export function PlantTimesheetV2PDF({ timesheet, employeeName, offDayStates = [] }: PlantTimesheetV2PDFProps) {
+export function PlantTimesheetV2PDF({
+  timesheet,
+  employeeName,
+  offDayStates = [],
+  logoSrc = null,
+}: PlantTimesheetV2PDFProps) {
   const sortedEntries = (timesheet.entries || []).sort((a, b) => a.day_of_week - b.day_of_week);
   const allDays = normalizeTimesheetEntriesForDisplay(timesheet, [1, 2, 3, 4, 5, 6, 7].map((dayNum) => {
     const entry = sortedEntries.find((item) => item.day_of_week === dayNum);
@@ -332,76 +347,30 @@ export function PlantTimesheetV2PDF({ timesheet, employeeName, offDayStates = []
   }), offDayStates);
 
   const leaveAwareTotals = buildLeaveAwareTotals(allDays, offDayStates);
-  const formNumber = timesheet.id ? timesheet.id.slice(-5).toUpperCase() : '00000';
-
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
-        <View style={styles.formNumber}>
-          <Text>{formNumber}</Text>
-        </View>
+        <ResPdfHeader
+          title="Plant Shift Report"
+          subtitle="Plant and operator weekly record"
+          formCode="QF3215"
+          logoSrc={logoSrc}
+        />
+        <ResPdfMetaGrid
+          columns={4}
+          items={[
+            { label: 'Machine', value: timesheet.reg_number || '-' },
+            { label: 'Site', value: timesheet.site_address || 'Demo site / project' },
+            { label: 'Date', value: formatDate(new Date(timesheet.week_ending)) },
+            { label: 'Job No', value: formatEntryJobNumbers(sortedEntries[0] || {}) },
+            { label: 'Operator', value: employeeName || '-' },
+            { label: 'Hirer', value: timesheet.hirer_name || '-' },
+            { label: 'Plant ID / Serial', value: timesheet.hired_plant_id_serial || timesheet.reg_number || '-' },
+            { label: 'Description', value: timesheet.hired_plant_description || 'Plant and equipment on site' },
+          ]}
+        />
 
-        <View style={styles.companyHeader}>
-          <Text style={[styles.companyName, { color: templateConfig.branding.brandColor }]}>
-            {templateConfig.branding.companyName}
-          </Text>
-          <Text style={styles.companyDetails}>{getPdfRegisteredOfficeLine()}</Text>
-          <Text style={styles.companyPhone}>{getPdfContactLine()}</Text>
-        </View>
-
-        <View style={styles.headerGrid}>
-          <View style={styles.headerRow}>
-            <View style={styles.headerCell}>
-              <Text style={styles.headerLabel}>MACHINE</Text>
-              <View style={styles.headerValue}>
-                <Text>{timesheet.reg_number || ''}</Text>
-              </View>
-            </View>
-            <View style={styles.headerCell}>
-              <Text style={styles.headerLabel}>SITE ADDRESS</Text>
-              <View style={styles.headerValue}>
-                <Text>{timesheet.site_address || ''}</Text>
-              </View>
-            </View>
-            <View style={{ ...styles.headerCell, marginRight: 0 }}>
-              <Text style={styles.headerLabel}>W/E SUNDAY</Text>
-              <View style={styles.headerValue}>
-                <Text>{formatDate(new Date(timesheet.week_ending))}</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.headerRow}>
-            <View style={styles.headerCell}>
-              <Text style={styles.headerLabel}>OPERATOR</Text>
-              <View style={styles.headerValue}>
-                <Text>{employeeName || ''}</Text>
-              </View>
-            </View>
-            <View style={styles.headerCell}>
-              <Text style={styles.headerLabel}>HIRER</Text>
-              <View style={styles.headerValue}>
-                <Text>{timesheet.hirer_name || ''}</Text>
-              </View>
-            </View>
-          </View>
-
-          {timesheet.is_hired_plant && (
-            <View style={styles.hiredHeaderBlock}>
-              <Text style={styles.hiredHeaderTitle}>HIRED PLANT DETAILS</Text>
-              <Text style={styles.hiredHeaderLine}>
-                ID / SERIAL: {timesheet.hired_plant_id_serial || timesheet.reg_number || ''}
-              </Text>
-              <Text style={styles.hiredHeaderLine}>
-                DESCRIPTION: {timesheet.hired_plant_description || ''}
-              </Text>
-              <Text style={styles.hiredHeaderLine}>
-                HIRING COMPANY: {timesheet.hired_plant_hiring_company || ''}
-              </Text>
-            </View>
-          )}
-        </View>
-
+        <ResPdfSectionTitle>Resource Allocation (Hrs)</ResPdfSectionTitle>
         <View style={styles.table}>
           <View style={styles.tableHeaderRow}>
             <View style={styles.colDay}><Text style={styles.headerText}>DAY</Text></View>
@@ -470,6 +439,7 @@ export function PlantTimesheetV2PDF({ timesheet, employeeName, offDayStates = []
           </View>
         </View>
 
+        <ResPdfSectionTitle>Approval (For Office Use Only)</ResPdfSectionTitle>
         <View style={styles.footer}>
           <View style={styles.signatureRow}>
             <View style={styles.signatureBlock}>
@@ -515,6 +485,7 @@ export function PlantTimesheetV2PDF({ timesheet, employeeName, offDayStates = []
             </Text>
           </View>
         </View>
+        <ResPdfFooter formCode="QF3215" />
       </Page>
     </Document>
   );

@@ -2,10 +2,16 @@ import { readFile } from 'fs/promises';
 import { extname } from 'path';
 import { resolve } from 'path';
 import { templateConfig } from '@/lib/config/template-config';
+import { getPreferredPdfLogoPath } from '@/lib/pdf/res-pdf-theme';
 
-export async function loadTemplateLogoDataUrl(): Promise<string | null> {
+interface LoadTemplateLogoOptions {
+  preferPdfLogo?: boolean;
+}
+
+export async function loadTemplateLogoDataUrl(options: LoadTemplateLogoOptions = {}): Promise<string | null> {
   try {
-    const configuredLogoPath = resolve(process.cwd(), 'public', templateConfig.branding.logoPath.replace(/^\//, ''));
+    const publicLogoPath = options.preferPdfLogo ? getPreferredPdfLogoPath() : templateConfig.branding.logoPath;
+    const configuredLogoPath = resolve(process.cwd(), 'public', publicLogoPath.replace(/^\//, ''));
     const configuredExtension = extname(configuredLogoPath).toLowerCase();
     const logoPath = configuredExtension === '.svg' ? configuredLogoPath.replace(/\.svg$/i, '.png') : configuredLogoPath;
     const logoBuffer = await readFile(logoPath);

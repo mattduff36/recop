@@ -3,13 +3,13 @@ import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from '@reac
 import { VanInspection, InspectionItem } from '@/types/inspection';
 import { formatDate } from '@/lib/utils/date';
 import { buildInspectionPdfCommentsText } from '@/lib/utils/inspection-pdf-comments';
-import { templateConfig } from '@/lib/config/template-config';
-import { getPdfContactLine, getPdfRegisteredOfficeLine, getPdfRegistrationLine } from '@/lib/pdf/branding';
+import { ResPdfFooter, ResPdfHeader, ResPdfSectionTitle } from '@/lib/pdf/res-pdf-components';
 
 // Create styles for the PDF matching the Van inspection form
 const styles = StyleSheet.create({
   page: {
     padding: 20,
+    paddingBottom: 38,
     fontSize: 7,
     fontFamily: 'Helvetica',
   },
@@ -233,9 +233,10 @@ interface VanInspectionPDFProps {
   items: InspectionItem[];
   vehicleReg?: string;
   employeeName?: string;
+  logoSrc?: string | null;
 }
 
-export function VanInspectionPDF({ inspection, items, vehicleReg, employeeName }: VanInspectionPDFProps) {
+export function VanInspectionPDF({ inspection, items, vehicleReg, employeeName, logoSrc = null }: VanInspectionPDFProps) {
   const formatSignedAt = (signedAt?: string | null) => {
     if (!signedAt) {
       return '-';
@@ -292,21 +293,12 @@ export function VanInspectionPDF({ inspection, items, vehicleReg, employeeName }
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Form Number in top right */}
-        <View style={styles.formNumber}>
-          <Text>{formNumber}</Text>
-        </View>
-
-        {/* Company Header */}
-        <View style={styles.companyHeader}>
-          <Text style={[styles.companyName, { color: templateConfig.branding.brandColor }]}>
-            {templateConfig.branding.companyName}
-          </Text>
-          <Text style={styles.companyDetails}>{getPdfRegisteredOfficeLine()}</Text>
-          <Text style={styles.companyPhone}>{getPdfContactLine()}</Text>
-          <Text style={styles.registeredNo}>{getPdfRegistrationLine()}</Text>
-          <Text style={styles.pageTitle}>COMPANY VAN INSPECTION PAD</Text>
-        </View>
+        <ResPdfHeader
+          title="Company Van Inspection Pad"
+          subtitle={`Inspection ref ${formNumber}`}
+          formCode="QF3054"
+          logoSrc={logoSrc}
+        />
 
         {/* Top Info Table */}
         <View style={styles.topTable}>
@@ -355,6 +347,7 @@ export function VanInspectionPDF({ inspection, items, vehicleReg, employeeName }
           </View>
         </View>
 
+        <ResPdfSectionTitle>Daily Check Record</ResPdfSectionTitle>
         {/* Checklist Table */}
         <View style={styles.checklistTable}>
           {uniqueItems.map((item, index) => (
@@ -402,6 +395,7 @@ export function VanInspectionPDF({ inspection, items, vehicleReg, employeeName }
             {defectsAndComments || '................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................'}
           </Text>
         </View>
+        <ResPdfFooter formCode="QF3054" />
       </Page>
     </Document>
   );

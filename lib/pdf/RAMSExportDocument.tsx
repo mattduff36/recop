@@ -2,10 +2,12 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { templateConfig } from '@/lib/config/template-config';
+import { resPdfColors } from '@/lib/pdf/res-pdf-theme';
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 32,
+    paddingBottom: 46,
     fontSize: 10,
     fontFamily: 'Helvetica',
   },
@@ -14,12 +16,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 20,
-    borderBottom: '3pt solid #F9D71C',
-    paddingBottom: 15,
+    border: `1pt solid ${resPdfColors.black}`,
+    padding: 10,
   },
   logo: {
-    width: 120,
-    height: 'auto',
+    width: 92,
+    height: 46,
+    objectFit: 'contain',
   },
   headerText: {
     flex: 1,
@@ -28,12 +31,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#5A6C7D',
+    color: resPdfColors.black,
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 12,
-    color: '#5A6C7D',
+    color: resPdfColors.grey,
     marginBottom: 3,
   },
   section: {
@@ -44,10 +47,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#5A6C7D',
-    backgroundColor: '#F9D71C',
+    color: resPdfColors.white,
+    backgroundColor: resPdfColors.navy,
     padding: 8,
-    borderRadius: 3,
+    border: `1pt solid ${resPdfColors.black}`,
   },
   infoRow: {
     flexDirection: 'row',
@@ -56,37 +59,36 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: 'bold',
     width: 120,
-    color: '#5A6C7D',
+    color: resPdfColors.black,
   },
   value: {
     flex: 1,
-    color: '#1e293b',
+    color: resPdfColors.black,
   },
   table: {
     marginTop: 10,
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#F9D71C',
+    backgroundColor: resPdfColors.navy,
     padding: 8,
     fontWeight: 'bold',
-    borderBottom: '2pt solid #5A6C7D',
+    borderBottom: `1pt solid ${resPdfColors.black}`,
   },
   tableRow: {
     flexDirection: 'row',
     padding: 8,
-    borderBottom: '0.5pt solid #e2e8f0',
+    borderBottom: `0.5pt solid ${resPdfColors.black}`,
   },
   tableCell: {
     flex: 1,
-    color: '#5A6C7D',
+    color: resPdfColors.black,
   },
   signatureBox: {
     marginTop: 10,
     padding: 10,
-    border: '2pt solid #F9D71C',
-    borderRadius: 4,
-    backgroundColor: '#fffef5',
+    border: `1pt solid ${resPdfColors.black}`,
+    backgroundColor: resPdfColors.white,
   },
   signatureImage: {
     width: 200,
@@ -126,18 +128,17 @@ const styles = StyleSheet.create({
     left: 40,
     right: 40,
     textAlign: 'center',
-    color: '#5A6C7D',
+    color: resPdfColors.grey,
     fontSize: 8,
-    borderTop: '2pt solid #F9D71C',
+    borderTop: `1pt solid ${resPdfColors.black}`,
     paddingTop: 10,
   },
   statsCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 15,
-    backgroundColor: '#fffef5',
-    border: '2pt solid #F9D71C',
-    borderRadius: 5,
+    backgroundColor: resPdfColors.paleGrey,
+    border: `1pt solid ${resPdfColors.black}`,
     marginBottom: 15,
   },
   statItem: {
@@ -146,12 +147,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#5A6C7D',
+    color: resPdfColors.navy,
     marginBottom: 3,
   },
   statLabel: {
     fontSize: 9,
-    color: '#5A6C7D',
+    color: resPdfColors.black,
   },
 });
 

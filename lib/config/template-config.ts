@@ -124,9 +124,9 @@ export const templateConfig: TemplatePublicConfig = {
     {
       key: 'admin',
       label: 'Administrator',
-      name: 'Avery Stone',
-      description: 'Full system access and admin controls',
-      email: `avery.stone@${demoEmailDomain}`,
+      name: 'Alannah Dunnachie',
+      description: 'Railway Electrical Services admin view',
+      email: 'a-dunnachie@rail-elec.co.uk',
       password: 'DemoPass123!',
     },
     {

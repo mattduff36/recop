@@ -4,6 +4,7 @@ import { renderToStream } from '@react-pdf/renderer';
 import { PlantInspectionPDF } from '@/lib/pdf/plant-inspection-pdf';
 import { getProfileWithRole } from '@/lib/utils/permissions';
 import { logServerError } from '@/lib/utils/server-error-logger';
+import { loadTemplateLogoDataUrl } from '@/lib/pdf/template-logo';
 
 interface PlantInspectionWithRelations {
   id: string;
@@ -105,6 +106,7 @@ export async function GET(
 
     const inspectionWithRelations = inspection as unknown as PlantInspectionWithRelations;
     const isHired = inspectionWithRelations.is_hired_plant === true;
+    const logoSrc = await loadTemplateLogoDataUrl({ preferPdfLogo: true });
 
     // Generate PDF
     const pdfComponent = PlantInspectionPDF({
@@ -146,6 +148,7 @@ export async function GET(
         day_of_week: h.day_of_week,
         hours: h.hours,
       })),
+      logoSrc,
     });
     
     const stream = await renderToStream(pdfComponent);

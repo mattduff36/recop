@@ -7,6 +7,7 @@ import { shouldUsePlantTimesheetV2Template } from '@/lib/pdf/timesheet-template-
 import type { Timesheet } from '@/types/timesheet';
 import { getProfileWithRole } from '@/lib/utils/permissions';
 import { logServerError } from '@/lib/utils/server-error-logger';
+import { loadTemplateLogoDataUrl } from '@/lib/pdf/template-logo';
 import {
   type ApprovedAbsenceForTimesheet,
   getTimesheetWeekIsoBounds,
@@ -97,6 +98,7 @@ export async function GET(
       return row.date <= endIso && rowEnd >= startIso;
     });
     const offDayStates = resolveTimesheetOffDayStates(typedTimesheetData.week_ending, approvedAbsences, null);
+    const logoSrc = await loadTemplateLogoDataUrl({ preferPdfLogo: true });
 
     // Generate PDF
     const stream = await renderToStream(
@@ -105,11 +107,13 @@ export async function GET(
             timesheet: typedTimesheetData,
             employeeName: employeeName,
             offDayStates,
+            logoSrc,
           })
         : TimesheetPDF({
             timesheet: typedTimesheetData,
             employeeName: employeeName,
             offDayStates,
+            logoSrc,
           })
     );
 

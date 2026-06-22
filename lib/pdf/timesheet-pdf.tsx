@@ -6,68 +6,21 @@ import { getDidNotWorkReasonInfo } from '@/lib/utils/timesheetDidNotWork';
 import type { TimesheetOffDayState } from '@/lib/utils/timesheet-off-days';
 import { buildLeaveAwareTotals } from '@/lib/utils/timesheet-leave-totals';
 import { formatEntryJobNumbers, getPrimaryJobNumber } from '@/lib/utils/timesheet-job-codes';
-import { templateConfig } from '@/lib/config/template-config';
-import { getPdfContactLine, getPdfRegisteredOfficeLine } from '@/lib/pdf/branding';
+import {
+  ResPdfFooter,
+  ResPdfHeader,
+  ResPdfMetaGrid,
+  ResPdfSectionTitle,
+} from '@/lib/pdf/res-pdf-components';
+import { resPdfColors } from '@/lib/pdf/res-pdf-theme';
 
 // Create styles for the PDF matching the scanned form
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 24,
+    paddingBottom: 38,
     fontSize: 9,
     fontFamily: 'Helvetica',
-  },
-  // Form number in top right
-  formNumber: {
-    position: 'absolute',
-    top: 40,
-    right: 40,
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#666',
-  },
-  // Company header
-  companyHeader: {
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  companyName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 3,
-    letterSpacing: 0.5,
-  },
-  companyDetails: {
-    fontSize: 8,
-    marginBottom: 2,
-  },
-  companyPhone: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    marginTop: 3,
-  },
-  // Top info section
-  topInfo: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    marginTop: 10,
-  },
-  infoField: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  infoLabel: {
-    fontSize: 9,
-    marginRight: 5,
-  },
-  infoDots: {
-    flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: '#666',
-    borderBottomStyle: 'dotted',
-    marginRight: 10,
-    minHeight: 12,
-    justifyContent: 'flex-end',
-    paddingBottom: 1,
   },
   // Table
   table: {
@@ -79,6 +32,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#000',
+    backgroundColor: resPdfColors.navy,
   },
   tableRow: {
     flexDirection: 'row',
@@ -134,6 +88,9 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 8,
     textAlign: 'center',
+    color: resPdfColors.white,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
   cellText: {
     fontSize: 8,
@@ -141,7 +98,7 @@ const styles = StyleSheet.create({
   },
   // Footer section
   footer: {
-    marginTop: 30,
+    marginTop: 10,
   },
   footerText: {
     fontSize: 8,
@@ -187,17 +144,13 @@ interface TimesheetPDFProps {
   timesheet: Timesheet;
   employeeName?: string;
   offDayStates?: TimesheetOffDayState[];
+  logoSrc?: string | null;
 }
 
-export function TimesheetPDF({ timesheet, employeeName, offDayStates = [] }: TimesheetPDFProps) {
+export function TimesheetPDF({ timesheet, employeeName, offDayStates = [], logoSrc = null }: TimesheetPDFProps) {
   // Sort entries by day of week
   const sortedEntries = (timesheet.entries || []).sort((a, b) => a.day_of_week - b.day_of_week);
   
-  // Get form number (last 5 digits of ID or full ID if shorter)
-  const formNumber = timesheet.id 
-    ? timesheet.id.slice(-5).toUpperCase() 
-    : '00000';
-
   // Helper to format remarks with job number (entry may be full TimesheetEntry or partial from allDays)
   const formatRemarks = (entry: { job_number?: string | null; job_numbers?: string[]; remarks?: string | null }) => {
     const jobNumber = getPrimaryJobNumber(entry);
@@ -232,46 +185,26 @@ export function TimesheetPDF({ timesheet, employeeName, offDayStates = [] }: Tim
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Form Number in top right */}
-        <View style={styles.formNumber}>
-          <Text>{formNumber}</Text>
-        </View>
-
-        {/* Company Header */}
-        <View style={styles.companyHeader}>
-          <Text style={[styles.companyName, { color: templateConfig.branding.brandColor }]}>
-            {templateConfig.branding.companyName}
-          </Text>
-          <Text style={styles.companyDetails}>{getPdfRegisteredOfficeLine()}</Text>
-          <Text style={styles.companyPhone}>{getPdfContactLine()}</Text>
-        </View>
-
-        {/* Top Info Section */}
-        <View style={styles.topInfo}>
-          <View style={styles.infoField}>
-            <Text style={styles.infoLabel}>Reg No.</Text>
-            <View style={styles.infoDots}>
-              <Text style={{ fontSize: 9, paddingLeft: 5 }}>{timesheet.reg_number || ''}</Text>
-            </View>
-          </View>
-          <View style={styles.infoField}>
-            <Text style={styles.infoLabel}>W/E Sunday</Text>
-            <View style={styles.infoDots}>
-              <Text style={{ fontSize: 9, paddingLeft: 5 }}>{formatDate(new Date(timesheet.week_ending))}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={{ marginBottom: 20 }}>
-          <View style={styles.infoField}>
-            <Text style={styles.infoLabel}>Driver</Text>
-            <View style={styles.infoDots}>
-              <Text style={{ fontSize: 9, paddingLeft: 5 }}>{employeeName || ''}</Text>
-            </View>
-          </View>
-        </View>
+        <ResPdfHeader
+          title="Shift Report"
+          subtitle="Weekly timesheet export"
+          formCode="QF3215"
+          logoSrc={logoSrc}
+        />
+        <ResPdfMetaGrid
+          columns={3}
+          items={[
+            { label: 'Job No', value: formatEntryJobNumbers(sortedEntries[0] || {}) },
+            { label: 'Site', value: timesheet.site_address || 'Demo site / project' },
+            { label: 'Van Registration', value: timesheet.reg_number || '-' },
+            { label: 'Day', value: 'Week' },
+            { label: 'Date', value: formatDate(new Date(timesheet.week_ending)) },
+            { label: 'Completed By', value: employeeName || '-' },
+          ]}
+        />
 
         {/* Table */}
+        <ResPdfSectionTitle>Resource Allocation (Hrs)</ResPdfSectionTitle>
         <View style={styles.table}>
           {/* Header Row */}
           <View style={styles.tableHeaderRow}>
@@ -357,7 +290,7 @@ export function TimesheetPDF({ timesheet, employeeName, offDayStates = [] }: Tim
           </View>
         </View>
 
-        {/* Footer */}
+        <ResPdfSectionTitle>Approval (For Office Use Only)</ResPdfSectionTitle>
         <View style={styles.footer}>
           <Text style={styles.footerText}>
             All time and other details are correct and should{'\n'}be used as a basis for wages etc.
@@ -378,6 +311,7 @@ export function TimesheetPDF({ timesheet, employeeName, offDayStates = [] }: Tim
             </View>
           </View>
         </View>
+        <ResPdfFooter formCode="QF3215" />
       </Page>
     </Document>
   );

@@ -2,10 +2,12 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { templateConfig } from '@/lib/config/template-config';
+import { resPdfColors } from '@/lib/pdf/res-pdf-theme';
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 32,
+    paddingBottom: 46,
     fontSize: 10,
     fontFamily: 'Helvetica',
   },
@@ -14,12 +16,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 20,
-    borderBottom: '3pt solid #dc2626',
-    paddingBottom: 15,
+    border: `1pt solid ${resPdfColors.black}`,
+    padding: 10,
   },
   logo: {
-    width: 120,
-    height: 'auto',
+    width: 92,
+    height: 46,
+    objectFit: 'contain',
   },
   headerText: {
     flex: 1,
@@ -28,12 +31,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#5A6C7D',
+    color: resPdfColors.black,
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 12,
-    color: '#5A6C7D',
+    color: resPdfColors.grey,
     marginBottom: 3,
   },
   section: {
@@ -44,9 +47,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 10,
-    backgroundColor: '#dc2626',
+    backgroundColor: resPdfColors.navy,
     padding: 8,
-    borderRadius: 3,
+    border: `1pt solid ${resPdfColors.black}`,
     color: '#ffffff',
   },
   infoRow: {
@@ -56,28 +59,26 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: 'bold',
     width: 120,
-    color: '#5A6C7D',
+    color: resPdfColors.black,
   },
   value: {
     flex: 1,
-    color: '#1e293b',
+    color: resPdfColors.black,
   },
   messageBody: {
     padding: 10,
-    backgroundColor: '#f8fafc',
-    border: '1pt solid #e2e8f0',
-    borderRadius: 4,
+    backgroundColor: resPdfColors.paleGrey,
+    border: `1pt solid ${resPdfColors.black}`,
     marginTop: 10,
-    color: '#1e293b',
+    color: resPdfColors.black,
     lineHeight: 1.5,
   },
   statsCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 15,
-    backgroundColor: '#fef2f2',
-    border: '2pt solid #dc2626',
-    borderRadius: 5,
+    backgroundColor: resPdfColors.paleGrey,
+    border: `1pt solid ${resPdfColors.black}`,
     marginBottom: 15,
   },
   statItem: {
@@ -86,43 +87,42 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#5A6C7D',
+    color: resPdfColors.navy,
     marginBottom: 3,
   },
   statLabel: {
     fontSize: 9,
-    color: '#5A6C7D',
+    color: resPdfColors.black,
   },
   table: {
     marginTop: 10,
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#dc2626',
+    backgroundColor: resPdfColors.navy,
     padding: 8,
     fontWeight: 'bold',
-    borderBottom: '2pt solid #5A6C7D',
+    borderBottom: `1pt solid ${resPdfColors.black}`,
     color: '#ffffff',
   },
   tableRow: {
     flexDirection: 'row',
     padding: 8,
-    borderBottom: '0.5pt solid #e2e8f0',
+    borderBottom: `0.5pt solid ${resPdfColors.black}`,
   },
   tableCell: {
     flex: 1,
-    color: '#5A6C7D',
+    color: resPdfColors.black,
   },
   tableCellName: {
     flex: 2,
-    color: '#5A6C7D',
+    color: resPdfColors.black,
   },
   signatureBox: {
     marginTop: 10,
     padding: 10,
-    border: '2pt solid #dc2626',
-    borderRadius: 4,
-    backgroundColor: '#fef2f2',
+    border: `1pt solid ${resPdfColors.black}`,
+    backgroundColor: resPdfColors.white,
     breakInside: 'avoid',
   },
   signatureImage: {
@@ -149,21 +149,20 @@ const styles = StyleSheet.create({
     left: 40,
     right: 40,
     textAlign: 'center',
-    color: '#5A6C7D',
+    color: resPdfColors.grey,
     fontSize: 8,
-    borderTop: '2pt solid #dc2626',
+    borderTop: `1pt solid ${resPdfColors.black}`,
     paddingTop: 10,
   },
   pdfNote: {
     marginTop: 10,
     padding: 10,
-    backgroundColor: '#fef2f2',
-    border: '1pt solid #dc2626',
-    borderRadius: 4,
+    backgroundColor: resPdfColors.paleGrey,
+    border: `1pt solid ${resPdfColors.black}`,
   },
   pdfNoteText: {
     fontSize: 9,
-    color: '#5A6C7D',
+    color: resPdfColors.grey,
     fontStyle: 'italic',
   },
 });

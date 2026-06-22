@@ -15,6 +15,7 @@ import type { ModuleName } from '@/types/roles';
 import { canEffectiveRoleAccessModule } from '@/lib/utils/rbac';
 import { getReportScopeContext, getScopedProfileIdsForModule } from '@/lib/server/report-scope';
 import { logServerError } from '@/lib/utils/server-error-logger';
+import { loadTemplateLogoDataUrl } from '@/lib/pdf/template-logo';
 
 const MAX_INSPECTIONS_PER_PDF = 80;
 
@@ -121,7 +122,7 @@ async function getScopedModuleProfileIds(
   return scopedMap;
 }
 
-function resolveVanTemplate(inspection: VanInspectionWithRelations, items: InspectionItem[]) {
+function resolveVanTemplate(inspection: VanInspectionWithRelations, items: InspectionItem[], logoSrc: string | null) {
   const vehicleType = getVehicleCategoryName({
     van_categories: inspection.vehicle?.van_categories ?? null,
     vehicle_type: inspection.vehicle?.vehicle_type ?? null,
@@ -134,19 +135,22 @@ function resolveVanTemplate(inspection: VanInspectionWithRelations, items: Inspe
         items,
         vehicleReg: inspection.vehicle?.reg_number || undefined,
         employeeName: inspection.profile?.full_name || undefined,
+        logoSrc,
       })
     : InspectionPDF({
         inspection: inspection as unknown as VanInspection,
         items,
         vehicleReg: inspection.vehicle?.reg_number || undefined,
         employeeName: inspection.profile?.full_name || undefined,
+        logoSrc,
       });
 }
 
 function resolvePlantTemplate(
   inspection: PlantInspectionWithRelations,
   items: InspectionItem[],
-  dailyHours: Array<{ day_of_week: number; hours: number | null }>
+  dailyHours: Array<{ day_of_week: number; hours: number | null }>,
+  logoSrc: string | null
 ) {
   const isHired = inspection.is_hired_plant === true;
 
@@ -186,10 +190,11 @@ function resolvePlantTemplate(
       comments: item.comments || null,
     })),
     dailyHours,
+    logoSrc,
   });
 }
 
-function resolveHgvTemplate(inspection: HgvInspectionWithRelations, items: InspectionItem[]) {
+function resolveHgvTemplate(inspection: HgvInspectionWithRelations, items: InspectionItem[], logoSrc: string | null) {
   return HgvInspectionPDF({
     inspection: {
       id: inspection.id,
@@ -214,21 +219,23 @@ function resolveHgvTemplate(inspection: HgvInspectionWithRelations, items: Inspe
       status: item.status === 'defect' ? 'attention' : item.status,
       comments: item.comments || null,
     })),
+    logoSrc,
   });
 }
 
 function resolveInspectionPdfTemplate(
   inspection: DailyCheckInspection,
   items: InspectionItem[],
-  dailyHours: Array<{ day_of_week: number; hours: number | null }>
+  dailyHours: Array<{ day_of_week: number; hours: number | null }>,
+  logoSrc: string | null
 ) {
   if (inspection.source === 'plant') {
-    return resolvePlantTemplate(inspection, items, dailyHours);
+    return resolvePlantTemplate(inspection, items, dailyHours, logoSrc);
   }
   if (inspection.source === 'hgv') {
-    return resolveHgvTemplate(inspection, items);
+    return resolveHgvTemplate(inspection, items, logoSrc);
   }
-  return resolveVanTemplate(inspection, items);
+  return resolveVanTemplate(inspection, items, logoSrc);
 }
 
 async function fetchInspectionItems(
@@ -503,6 +510,7 @@ export async function POST(request: NextRequest) {
 
         const pdfBuffers: Array<{ name: string; buffer: Buffer }> = [];
         let processedCount = 0;
+        const logoSrc = await loadTemplateLogoDataUrl({ preferPdfLogo: true });
 
         for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex += 1) {
           const chunk = chunks[chunkIndex];
@@ -533,7 +541,7 @@ export async function POST(request: NextRequest) {
               continue;
             }
 
-            const pdfComponent = resolveInspectionPdfTemplate(inspection, items, dailyHours);
+            const pdfComponent = resolveInspectionPdfTemplate(inspection, items, dailyHours, logoSrc);
             const pdfBuffer = await renderToBuffer(pdfComponent);
             const singlePdf = await PDFDocument.load(pdfBuffer);
             const pages = await mergedPdf.copyPages(singlePdf, singlePdf.getPageIndices());

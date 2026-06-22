@@ -3,21 +3,23 @@ import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/render
 import { format } from 'date-fns';
 import { formatAssetMeterReading, getAssetMeterLabel, type AssetMeterUnit } from '@/lib/workshop-tasks/asset-meter';
 import { templateConfig } from '@/lib/config/template-config';
+import { getPdfReadableAccentColor, resPdfColors } from '@/lib/pdf/res-pdf-theme';
 
-const BRAND_YELLOW = templateConfig.branding.brandColor;
-const BRAND_YELLOW_LIGHT = '#fff6cc';
+const BRAND_YELLOW = getPdfReadableAccentColor();
+const BRAND_YELLOW_LIGHT = resPdfColors.paleGrey;
 const BRAND_TEXT = '#111827';
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 32,
+    paddingBottom: 46,
     fontSize: 9.5,
     fontFamily: 'Helvetica',
   },
   header: {
     marginBottom: 18,
-    borderBottom: `2pt solid ${BRAND_YELLOW}`,
-    paddingBottom: 12,
+    border: `1pt solid ${resPdfColors.black}`,
+    padding: 10,
   },
   headerRow: {
     flexDirection: 'row',
@@ -58,10 +60,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
     marginBottom: 6,
-    color: BRAND_TEXT,
+    color: resPdfColors.white,
     backgroundColor: BRAND_YELLOW,
     padding: 6,
-    borderRadius: 2,
+    border: `1pt solid ${resPdfColors.black}`,
   },
   infoRow: {
     flexDirection: 'row',
@@ -84,8 +86,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 10,
     backgroundColor: BRAND_YELLOW_LIGHT,
-    border: `1pt solid ${BRAND_YELLOW}`,
-    borderRadius: 3,
+    border: `1pt solid ${resPdfColors.black}`,
     marginBottom: 10,
   },
   statItem: {
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     border: '1pt solid #d1d5db',
     borderBottom: '0pt solid transparent',
-    backgroundColor: BRAND_YELLOW_LIGHT,
+    backgroundColor: BRAND_YELLOW,
   },
   checklistTableHeaderCellLabel: {
     width: '46%',
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     fontSize: 8.5,
     fontWeight: 'bold',
-    color: '#334155',
+    color: resPdfColors.white,
   },
   checklistTableHeaderCellValue: {
     width: '54%',
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     fontSize: 8.5,
     fontWeight: 'bold',
-    color: '#334155',
+    color: resPdfColors.white,
   },
   checklistRow: {
     flexDirection: 'row',
@@ -177,7 +178,6 @@ const styles = StyleSheet.create({
   signatureCard: {
     border: '1pt solid #d1d5db',
     borderLeft: `4pt solid ${BRAND_YELLOW}`,
-    borderRadius: 4,
     padding: 6,
     backgroundColor: '#fbfcfe',
     flexDirection: 'row',
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   },
   statusPending: {
     backgroundColor: BRAND_YELLOW,
-    color: BRAND_TEXT,
+    color: resPdfColors.white,
   },
   valueBadge: {
     alignSelf: 'flex-start',

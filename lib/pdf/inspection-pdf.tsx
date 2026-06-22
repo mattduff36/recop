@@ -3,13 +3,14 @@ import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from '@reac
 import { VanInspection, InspectionItem, INSPECTION_ITEMS } from '@/types/inspection';
 import { formatDate } from '@/lib/utils/date';
 import { buildInspectionPdfCommentsText } from '@/lib/utils/inspection-pdf-comments';
-import { templateConfig } from '@/lib/config/template-config';
-import { getPdfContactLine, getPdfRegisteredOfficeLine, getPdfRegistrationLine } from '@/lib/pdf/branding';
+import { ResPdfFooter, ResPdfHeader, ResPdfSectionTitle } from '@/lib/pdf/res-pdf-components';
+import { resPdfColors } from '@/lib/pdf/res-pdf-theme';
 
 // Create styles for the PDF matching the scanned form
 const styles = StyleSheet.create({
   page: {
     padding: 20,
+    paddingBottom: 38,
     fontSize: 7,
     fontFamily: 'Helvetica',
   },
@@ -176,13 +177,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#000',
-    backgroundColor: '#e0e0e0',
+    backgroundColor: resPdfColors.navy,
     padding: 4,
     justifyContent: 'center',
   },
   sectionHeaderText: {
     fontSize: 8,
     fontWeight: 'bold',
+    color: resPdfColors.white,
   },
   // Checked by section
   checkedBySection: {
@@ -264,9 +266,10 @@ interface InspectionPDFProps {
   items: InspectionItem[];
   vehicleReg?: string;
   employeeName?: string;
+  logoSrc?: string | null;
 }
 
-export function InspectionPDF({ inspection, items, vehicleReg, employeeName }: InspectionPDFProps) {
+export function InspectionPDF({ inspection, items, vehicleReg, employeeName, logoSrc = null }: InspectionPDFProps) {
   const formatSignedAt = (signedAt?: string | null) => {
     if (!signedAt) {
       return '-';
@@ -340,21 +343,12 @@ export function InspectionPDF({ inspection, items, vehicleReg, employeeName }: I
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Form Number in top right */}
-        <View style={styles.formNumber}>
-          <Text>{formNumber}</Text>
-        </View>
-
-        {/* Company Header */}
-        <View style={styles.companyHeader}>
-          <Text style={[styles.companyName, { color: templateConfig.branding.brandColor }]}>
-            {templateConfig.branding.companyName}
-          </Text>
-          <Text style={styles.companyDetails}>{getPdfRegisteredOfficeLine()}</Text>
-          <Text style={styles.companyPhone}>{getPdfContactLine()}</Text>
-          <Text style={styles.registeredNo}>{getPdfRegistrationLine()}</Text>
-          <Text style={styles.pageTitle}>VAN INSPECTION PAD</Text>
-        </View>
+        <ResPdfHeader
+          title="Van Inspection Pad"
+          subtitle={`Inspection ref ${formNumber}`}
+          formCode="QF3054"
+          logoSrc={logoSrc}
+        />
 
         {/* Top Info Table */}
         <View style={styles.topTable}>
@@ -403,6 +397,7 @@ export function InspectionPDF({ inspection, items, vehicleReg, employeeName }: I
           </View>
         </View>
 
+        <ResPdfSectionTitle>Daily Check Record</ResPdfSectionTitle>
         {/* Checklist Table */}
         <View style={styles.checklistTable}>
           {formItems.map((item, index) => (
@@ -500,6 +495,7 @@ export function InspectionPDF({ inspection, items, vehicleReg, employeeName }: I
             Distribution: White - Workshop Manager.    Yellow - Retained in Vehicle
           </Text>
         </View>
+        <ResPdfFooter formCode="QF3054" />
       </Page>
     </Document>
   );

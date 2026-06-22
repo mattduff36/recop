@@ -5,6 +5,7 @@ import { renderToBuffer } from '@react-pdf/renderer';
 import { RAMSExportDocument } from '@/lib/pdf/RAMSExportDocument';
 import { logServerError } from '@/lib/utils/server-error-logger';
 import { canEffectiveRoleAccessModule } from '@/lib/utils/rbac';
+import { loadTemplateLogoDataUrl } from '@/lib/pdf/template-logo';
 
 export async function GET(
   request: NextRequest,
@@ -91,7 +92,7 @@ export async function GET(
     // Construct absolute logo URL
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const host = request.headers.get('host') || 'localhost:4000';
-    const logoUrl = `${protocol}://${host}/images/logo.png`;
+    const logoUrl = await loadTemplateLogoDataUrl({ preferPdfLogo: true }) || `${protocol}://${host}/images/logo.png`;
 
     // Generate PDF
     const typedDocument = document as ({

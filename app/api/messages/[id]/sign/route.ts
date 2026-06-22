@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getCurrentAuthenticatedProfile } from '@/lib/server/app-auth/session';
 import { logServerError } from '@/lib/utils/server-error-logger';
 import type { SignMessageResponse } from '@/types/messages';
 
@@ -14,13 +15,11 @@ export async function POST(
 ) {
   try {
     const { id: recipientId } = await params;
-    const supabase = await createClient();
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const current = await getCurrentAuthenticatedProfile();
+    if (!current) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const supabase = createAdminClient();
 
     // Parse request body
     const body = await request.json();
@@ -42,7 +41,7 @@ export async function POST(
         )
       `)
       .eq('id', recipientId)
-      .eq('user_id', user.id)
+      .eq('user_id', current.profile.id)
       .single();
 
     if (fetchError || !recipient) {

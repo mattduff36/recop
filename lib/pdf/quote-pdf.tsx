@@ -2,9 +2,11 @@ import React from 'react';
 import { Document, Image, Link, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { templateConfig } from '@/lib/config/template-config';
+import { getPdfContactLine, getPdfRegisteredOfficeLine } from '@/lib/pdf/branding';
+import { getPdfReadableAccentColor, resPdfColors } from '@/lib/pdf/res-pdf-theme';
 
-const BRAND_YELLOW = templateConfig.branding.brandColor;
-const BRAND_YELLOW_LIGHT = '#fff6cc';
+const BRAND_YELLOW = getPdfReadableAccentColor();
+const BRAND_YELLOW_LIGHT = resPdfColors.paleGrey;
 const BRAND_TEXT = '#111827';
 const BRAND_MUTED = '#475569';
 const BRAND_BORDER = '#cbd5e1';
@@ -210,7 +212,7 @@ const styles = StyleSheet.create({
   tableHeaderText: {
     fontSize: 8.5,
     fontWeight: 'bold',
-    color: BRAND_TEXT,
+    color: resPdfColors.white,
   },
   tableRow: {
     flexDirection: 'row',
@@ -470,18 +472,16 @@ export function QuotePDF({
           <View style={styles.contactStrip}>
             <View style={styles.contactItem}>
               <Text style={styles.contactLabel}>Telephone</Text>
-              <Text style={styles.contactValue}>01636 812227</Text>
+              <Text style={styles.contactValue}>{templateConfig.branding.supportPhone || getPdfContactLine()}</Text>
             </View>
             <View style={styles.contactItem}>
               <Text style={styles.contactLabel}>Email / Web</Text>
-              <Text style={styles.contactValue}>office@example.com</Text>
-              <Text style={styles.contactValue}>example.com</Text>
+              <Text style={styles.contactValue}>{templateConfig.branding.supportEmail}</Text>
+              <Text style={styles.contactValue}>{templateConfig.branding.publicUrl}</Text>
             </View>
             <View style={styles.contactItem}>
               <Text style={styles.contactLabel}>Registered Office</Text>
-              <Text style={styles.contactValue}>
-                1 Template Road, Sample Business Park, Sample City, AB1 2CD
-              </Text>
+              <Text style={styles.contactValue}>{getPdfRegisteredOfficeLine()}</Text>
             </View>
           </View>
         </View>

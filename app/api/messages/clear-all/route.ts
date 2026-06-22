@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getCurrentAuthenticatedProfile } from '@/lib/server/app-auth/session';
 import { logServerError } from '@/lib/utils/server-error-logger';
 
 /**
@@ -10,13 +11,11 @@ import { logServerError } from '@/lib/utils/server-error-logger';
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const current = await getCurrentAuthenticatedProfile();
+    if (!current) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const supabase = createAdminClient();
 
     // Update all user's message recipients to mark as cleared
     const { error: updateError } = await supabase
@@ -24,7 +23,7 @@ export async function POST(request: NextRequest) {
       .update({
         cleared_from_inbox_at: new Date().toISOString()
       })
-      .eq('user_id', user.id)
+      .eq('user_id', current.profile.id)
       .is('cleared_from_inbox_at', null); // Only clear ones that haven't been cleared already
 
     if (updateError) {

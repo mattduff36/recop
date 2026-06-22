@@ -14,29 +14,31 @@ describe('template productisation config', () => {
 
   it('builds demo personas from the configured demo domain', () => {
     const personas = getDemoPersonas();
+    const nonClientPersonas = personas.filter((persona) => persona.key !== 'admin');
 
     expect(personas).toHaveLength(4);
-    expect(personas.every((persona) => persona.email.endsWith(`@${templateConfig.demoEmailDomain}`))).toBe(true);
+    expect(personas.find((persona) => persona.key === 'admin')?.email).toBe('a-dunnachie@rail-elec.co.uk');
+    expect(nonClientPersonas.every((persona) => persona.email.endsWith(`@${templateConfig.demoEmailDomain}`))).toBe(true);
   });
 });
 
 describe('demo email utilities', () => {
   it('detects fake demo email recipients', () => {
-    expect(isDemoEmail(`avery.stone@${templateConfig.demoEmailDomain}`)).toBe(true);
+    expect(isDemoEmail(`morgan.reid@${templateConfig.demoEmailDomain}`)).toBe(true);
     expect(isDemoEmail('real.person@example.com')).toBe(false);
   });
 
   it('separates demo and real recipients', () => {
     const result = inspectDemoEmailRecipients([
-      `avery.stone@${templateConfig.demoEmailDomain}`,
+      `morgan.reid@${templateConfig.demoEmailDomain}`,
       'real.person@example.com',
     ]);
 
-    expect(result.demoRecipients).toEqual([`avery.stone@${templateConfig.demoEmailDomain}`]);
+    expect(result.demoRecipients).toEqual([`morgan.reid@${templateConfig.demoEmailDomain}`]);
     expect(result.realRecipients).toEqual(['real.person@example.com']);
   });
 
   it('derives readable names for demo users', () => {
-    expect(getDemoUserName(`avery.stone@${templateConfig.demoEmailDomain}`)).toBe('Avery Stone');
+    expect(getDemoUserName(`morgan.reid@${templateConfig.demoEmailDomain}`)).toBe('Morgan Reid');
   });
 });

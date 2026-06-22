@@ -3,11 +3,11 @@ import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from '@reac
 import { TRUCK_CHECKLIST_ITEMS } from '@/lib/checklists/vehicle-checklists';
 import { formatDate } from '@/lib/utils/date';
 import type { EnrichedDefectItem } from '@/lib/utils/hgvDefectWorkshopDetails';
-import { templateConfig } from '@/lib/config/template-config';
-import { getPdfContactLine, getPdfRegisteredOfficeLine, getPdfRegistrationLine } from '@/lib/pdf/branding';
+import { ResPdfFooter, ResPdfHeader, ResPdfSectionTitle } from '@/lib/pdf/res-pdf-components';
+import { resPdfColors } from '@/lib/pdf/res-pdf-theme';
 
 const styles = StyleSheet.create({
-  page: { padding: 20, fontSize: 7, fontFamily: 'Helvetica' },
+  page: { padding: 20, paddingBottom: 38, fontSize: 7, fontFamily: 'Helvetica' },
   formNumber: {
     position: 'absolute',
     top: 34,
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#000',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: resPdfColors.navy,
     minHeight: 18,
     alignItems: 'center',
   },
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   commentsCell: { width: '20%', justifyContent: 'center', padding: 3 },
-  headerText: { fontSize: 7, fontWeight: 'bold' },
+  headerText: { fontSize: 7, fontWeight: 'bold', color: resPdfColors.white },
   numText: { fontSize: 8, fontWeight: 'bold' },
   itemText: { fontSize: 6.5 },
   markText: { fontSize: 7, fontWeight: 'bold' },
@@ -92,11 +92,12 @@ const styles = StyleSheet.create({
   sectionDividerRow: {
     borderBottomWidth: 1,
     borderBottomColor: '#000',
-    backgroundColor: '#eef4ff',
+    backgroundColor: resPdfColors.navy,
   },
   sectionDividerText: {
     fontSize: 7,
     fontWeight: 'bold',
+    color: resPdfColors.white,
     textAlign: 'center',
     paddingVertical: 3,
   },
@@ -173,9 +174,17 @@ interface HgvInspectionPDFProps {
     comments: string | null;
   }>;
   defectsWithWorkshop?: EnrichedDefectItem[];
+  logoSrc?: string | null;
 }
 
-export function HgvInspectionPDF({ inspection, hgv, operator, items, defectsWithWorkshop = [] }: HgvInspectionPDFProps) {
+export function HgvInspectionPDF({
+  inspection,
+  hgv,
+  operator,
+  items,
+  defectsWithWorkshop = [],
+  logoSrc = null,
+}: HgvInspectionPDFProps) {
   const formNumber = inspection.id ? inspection.id.slice(-5).toUpperCase() : '00000';
   const inspectionDay = (() => {
     const date = new Date(inspection.inspection_date);
@@ -214,19 +223,12 @@ export function HgvInspectionPDF({ inspection, hgv, operator, items, defectsWith
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.formNumber}>
-          <Text>{formNumber}</Text>
-        </View>
-
-        <View style={styles.companyHeader}>
-          <Text style={[styles.companyName, { color: templateConfig.branding.brandColor }]}>
-            {templateConfig.branding.companyName}
-          </Text>
-          <Text style={styles.companyDetails}>{getPdfRegisteredOfficeLine()}</Text>
-          <Text style={styles.companyPhone}>{getPdfContactLine()}</Text>
-          <Text style={styles.registeredNo}>{getPdfRegistrationLine()}</Text>
-          <Text style={styles.pageTitle}>HGV INSPECTION PAD</Text>
-        </View>
+        <ResPdfHeader
+          title="HGV Inspection Pad"
+          subtitle={`Inspection ref ${formNumber}`}
+          formCode="QF3054"
+          logoSrc={logoSrc}
+        />
 
         <View style={styles.topTable}>
           <View style={styles.topRow}>
@@ -245,6 +247,7 @@ export function HgvInspectionPDF({ inspection, hgv, operator, items, defectsWith
           </View>
         </View>
 
+        <ResPdfSectionTitle>Daily Check Record</ResPdfSectionTitle>
         <View style={styles.checklistTable}>
           <View style={styles.checklistHeader}>
             <View style={styles.numCell}>
@@ -374,6 +377,7 @@ export function HgvInspectionPDF({ inspection, hgv, operator, items, defectsWith
           <Text style={styles.legendNote}>Inspection Date: {formatDate(inspection.inspection_date)}</Text>
           <Text style={styles.legendNote}>Category: {hgv.hgv_categories?.name || 'Uncategorised'}{hgv.nickname ? ` | Nickname: ${hgv.nickname}` : ''}</Text>
         </View>
+        <ResPdfFooter formCode="QF3054" />
       </Page>
     </Document>
   );

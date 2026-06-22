@@ -2,11 +2,11 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from '@react-pdf/renderer';
 import { PLANT_INSPECTION_ITEMS } from '@/lib/checklists/plant-checklists';
 import { formatDate } from '@/lib/utils/date';
-import { templateConfig } from '@/lib/config/template-config';
-import { getPdfContactLine, getPdfRegisteredOfficeLine, getPdfRegistrationLine } from '@/lib/pdf/branding';
+import { ResPdfFooter, ResPdfHeader, ResPdfSectionTitle } from '@/lib/pdf/res-pdf-components';
+import { resPdfColors } from '@/lib/pdf/res-pdf-theme';
 
 const styles = StyleSheet.create({
-  page: { padding: 20, fontSize: 7, fontFamily: 'Helvetica' },
+  page: { padding: 20, paddingBottom: 38, fontSize: 7, fontFamily: 'Helvetica' },
   formNumber: {
     position: 'absolute',
     top: 34,
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#000',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: resPdfColors.navy,
     minHeight: 18,
     alignItems: 'center',
   },
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   commentsCell: { width: '24%', justifyContent: 'center', padding: 3 },
-  headerText: { fontSize: 7, fontWeight: 'bold' },
+  headerText: { fontSize: 7, fontWeight: 'bold', color: resPdfColors.white },
   numText: { fontSize: 8, fontWeight: 'bold' },
   itemText: { fontSize: 7 },
   markText: { fontSize: 7, fontWeight: 'bold' },
@@ -149,6 +149,7 @@ interface PlantInspectionPDFProps {
     day_of_week: number;
     hours: number | null;
   }>;
+  logoSrc?: string | null;
 }
 
 export function PlantInspectionPDF({
@@ -157,6 +158,7 @@ export function PlantInspectionPDF({
   operator,
   items,
   dailyHours,
+  logoSrc = null,
 }: PlantInspectionPDFProps) {
   const formNumber = inspection.id ? inspection.id.slice(-5).toUpperCase() : '00000';
   const inspectionDay = (() => {
@@ -202,19 +204,12 @@ export function PlantInspectionPDF({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.formNumber}>
-          <Text>{formNumber}</Text>
-        </View>
-
-        <View style={styles.companyHeader}>
-          <Text style={[styles.companyName, { color: templateConfig.branding.brandColor }]}>
-            {templateConfig.branding.companyName}
-          </Text>
-          <Text style={styles.companyDetails}>{getPdfRegisteredOfficeLine()}</Text>
-          <Text style={styles.companyPhone}>{getPdfContactLine()}</Text>
-          <Text style={styles.registeredNo}>{getPdfRegistrationLine()}</Text>
-          <Text style={styles.pageTitle}>OPERATED PLANT INSPECTION PAD</Text>
-        </View>
+        <ResPdfHeader
+          title="Operated Plant Inspection Pad"
+          subtitle={`Inspection ref ${formNumber}`}
+          formCode="QF3054"
+          logoSrc={logoSrc}
+        />
 
         <View style={styles.topTable}>
           <View style={styles.topRow}>
@@ -233,6 +228,7 @@ export function PlantInspectionPDF({
           </View>
         </View>
 
+        <ResPdfSectionTitle>Daily Check Record</ResPdfSectionTitle>
         <View style={styles.checklistTable}>
           <View style={styles.checklistHeader}>
             <View style={styles.numCell}>
@@ -311,6 +307,7 @@ export function PlantInspectionPDF({
           {dailyHours.length > 0 && <Text style={styles.legendNote}>Daily hours records present: {dailyHours.length}</Text>}
           {plant.hiringCompany && <Text style={styles.legendNote}>Hiring Company: {plant.hiringCompany}</Text>}
         </View>
+        <ResPdfFooter formCode="QF3054" />
       </Page>
     </Document>
   );

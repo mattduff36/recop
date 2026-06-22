@@ -7,6 +7,7 @@ import { isVanCategory } from '@/lib/checklists/vehicle-checklists';
 import { getProfileWithRole } from '@/lib/utils/permissions';
 import { getVehicleCategoryName } from '@/lib/utils/deprecation-logger';
 import { logServerError } from '@/lib/utils/server-error-logger';
+import { loadTemplateLogoDataUrl } from '@/lib/pdf/template-logo';
 
 export const runtime = 'nodejs';
 
@@ -98,6 +99,7 @@ const vehicleType = getVehicleCategoryName(vehicle ?? {});
     const useVanTemplate = isVanCategory(vehicleType);
     
     console.log(`PDF Generation - Vehicle Type: ${vehicleType}, Using Van Template: ${useVanTemplate}`);
+    const logoSrc = await loadTemplateLogoDataUrl({ preferPdfLogo: true });
     
     // Generate PDF using the appropriate template
     const pdfComponent = useVanTemplate
@@ -106,12 +108,14 @@ const vehicleType = getVehicleCategoryName(vehicle ?? {});
           items,
           vehicleReg: (inspection as InspectionWithVehicle).vehicle?.reg_number,
           employeeName: (inspection as InspectionWithVehicle).profile?.full_name,
+          logoSrc,
         })
       : InspectionPDF({
           inspection,
           items,
           vehicleReg: (inspection as InspectionWithVehicle).vehicle?.reg_number,
           employeeName: (inspection as InspectionWithVehicle).profile?.full_name,
+          logoSrc,
         });
     
     const stream = await renderToStream(pdfComponent);

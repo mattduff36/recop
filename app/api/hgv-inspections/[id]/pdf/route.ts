@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfileWithRole } from '@/lib/utils/permissions';
 import { HgvInspectionPDF } from '@/lib/pdf/hgv-inspection-pdf';
 import { enrichDefectsWithWorkshopCompletion } from '@/lib/utils/hgvDefectWorkshopDetails';
+import { loadTemplateLogoDataUrl } from '@/lib/pdf/template-logo';
 
 interface HgvInspectionWithRelations {
   id: string;
@@ -87,6 +88,7 @@ export async function GET(
           comments: item.comments,
         }))
     );
+    const logoSrc = await loadTemplateLogoDataUrl({ preferPdfLogo: true });
 
     const pdfComponent = HgvInspectionPDF({
       inspection: {
@@ -113,6 +115,7 @@ export async function GET(
         comments: item.comments,
       })),
       defectsWithWorkshop,
+      logoSrc,
     });
 
     const stream = await renderToStream(pdfComponent);

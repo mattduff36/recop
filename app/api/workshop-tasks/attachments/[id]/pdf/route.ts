@@ -372,7 +372,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     const templateName = attachment.workshop_attachment_templates?.name || 'Attachment';
-    const logoSrc = await loadTemplateLogoDataUrl();
+    const logoSrc = await loadTemplateLogoDataUrl({ preferPdfLogo: true });
     const reportCreatedAt = task?.created_at ?? attachment.created_at;
     const reportCompletedAt = task ? task.actioned_at : attachment.completed_at;
     const completedStatusEvent = getLatestCompletedStatusEvent(task?.status_history);

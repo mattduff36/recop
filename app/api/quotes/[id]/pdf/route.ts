@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .eq('quote_id', id)
       .order('sort_order', { ascending: true });
 
-    const logoSrc = await loadTemplateLogoDataUrl();
+    const logoSrc = await loadTemplateLogoDataUrl({ preferPdfLogo: true });
 
     const pdfDocument = QuotePDF({
       quoteReference: quote.quote_reference,

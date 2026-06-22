@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { logServerError } from '@/lib/utils/server-error-logger';
 import { getCurrentAuthenticatedProfile } from '@/lib/server/app-auth/session';
 import {
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const userId = current.profile.id;
     const limit = parseNotificationLimit(request.nextUrl.searchParams.get('limit'));
     const [notifications, unread_count] = await Promise.all([
