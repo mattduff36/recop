@@ -10,6 +10,7 @@ import {
   PackageSearch,
   LucideIcon
 } from 'lucide-react';
+import { demoBranchConfig } from '@/lib/config/demo-branch-config';
 
 /**
  * Form Type Configuration
@@ -157,7 +158,21 @@ export const FORM_TYPES: FormType[] = [
  * Get only enabled form types
  */
 export function getEnabledForms(): FormType[] {
-  return FORM_TYPES.filter(form => form.enabled);
+  const enabledForms = FORM_TYPES.filter((form) => form.enabled);
+
+  if (!demoBranchConfig.enabled || demoBranchConfig.navigationPriorityHrefs.length === 0) {
+    return enabledForms;
+  }
+
+  const priorityByHref = new Map(
+    demoBranchConfig.navigationPriorityHrefs.map((href, index) => [href, index])
+  );
+
+  return [...enabledForms].sort((left, right) => {
+    const leftPriority = priorityByHref.get(left.href) ?? Number.MAX_SAFE_INTEGER;
+    const rightPriority = priorityByHref.get(right.href) ?? Number.MAX_SAFE_INTEGER;
+    return leftPriority - rightPriority;
+  });
 }
 
 /**

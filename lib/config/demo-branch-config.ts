@@ -69,6 +69,7 @@ export const demoBranchConfig: DemoBranchConfig = {
   "/plant-inspections",
   "/hgv-inspections",
   "/projects",
+  "/toolbox-talks",
   "/absence",
   "/absence/manage",
   "/reports"

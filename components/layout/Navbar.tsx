@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -50,6 +51,7 @@ import {
   managerNavItems, 
   adminNavItems 
 } from '@/lib/config/navigation';
+import { demoBranchConfig } from '@/lib/config/demo-branch-config';
 
 const ACCOUNT_SWITCH_TEMPORARILY_DISABLED = true;
 const ACCOUNT_SWITCH_DISABLED_REASON = 'Temporarily disabled while issues are investigated.';
@@ -156,6 +158,37 @@ const PIN_KEY_BUTTON_CLASS =
   `h-auto w-full aspect-[2/1] rounded-xl text-lg font-semibold bg-slate-950 text-white hover:bg-slate-900 sm:text-xl ${PIN_KEY_INTERACTION_CLASS}`;
 const PIN_ACTION_BUTTON_CLASS =
   `h-auto w-full aspect-[2/1] rounded-xl text-sm sm:text-base ${PIN_KEY_INTERACTION_CLASS}`;
+
+function NavbarBrandMark() {
+  const isRailwayElectricalDemo =
+    demoBranchConfig.enabled &&
+    demoBranchConfig.submissionNumber === 5 &&
+    demoBranchConfig.companyName === 'Railway Electrical Services';
+
+  if (!isRailwayElectricalDemo) {
+    return (
+      <div className="text-xl font-bold text-white transition-colors group-hover:text-brand-yellow">
+        TEMPLATE
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 text-white transition-colors group-hover:text-brand-yellow">
+      <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm">
+        <Image
+          src="/demo-personalisation/submission-5/railway-electrical-services-logo-small.png"
+          alt="Railway Electrical Services logo"
+          width={28}
+          height={28}
+          className="h-full w-full object-contain"
+          unoptimized
+        />
+      </span>
+      <span className="text-lg font-black tracking-[0.1em]">RESOP</span>
+    </div>
+  );
+}
 
 export function Navbar() {
   const router = useRouter();
@@ -784,9 +817,7 @@ export function Navbar() {
                 href="/dashboard"
                 className="flex items-center group"
               >
-                <div className="text-xl font-bold text-white group-hover:text-brand-yellow transition-colors">
-                  TEMPLATE
-                </div>
+                <NavbarBrandMark />
               </Link>
               <div className="ml-auto flex items-center gap-2">
                 {accountSwitcherEnabled ? (
@@ -809,15 +840,12 @@ export function Navbar() {
             </div>
           ) : (
           <div className="flex items-center h-16">
-            {/* Mobile-only text logo */}
             <Link 
               href="/dashboard" 
-              className="md:hidden flex items-center mr-4 group"
+              className="flex items-center mr-4 group"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <div className="text-xl font-bold text-white group-hover:text-brand-yellow transition-colors">
-                TEMPLATE
-              </div>
+              <NavbarBrandMark />
             </Link>
 
             {/* Desktop Navigation - Centered, auto-compacts to icon-only when space is tight */}

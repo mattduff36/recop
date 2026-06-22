@@ -190,6 +190,7 @@ export function PersonalisedDemoWelcomeModal() {
   const teamLabels = getItems(welcomeConfig?.teamLabels);
   const assetLabels = getItems(welcomeConfig?.assetLabels);
   const documentOutputLabels = getItems(welcomeConfig?.documentOutputLabels);
+  const primaryDemoObjectiveLabel = welcomeConfig?.primaryDemoObjectiveLabel?.trim();
   const workflowFocusSummary = getWorkflowFocusSummary(priorityModuleLabels);
   const operationalFitSummary = getOperationalFitSummary({
     industryLabel: welcomeConfig?.industryLabel,
@@ -199,6 +200,15 @@ export function PersonalisedDemoWelcomeModal() {
     assetLabels,
   });
   const detailCards: DetailCard[] = [
+    ...(primaryDemoObjectiveLabel
+      ? [
+          {
+            label: 'Proof point',
+            value: `The walkthrough is tuned to prove that ${lowerFirst(primaryDemoObjectiveLabel)}.`,
+            icon: Gauge,
+          },
+        ]
+      : []),
     {
       label: 'Branding',
       value: `${branding.appName} uses your submitted logo, colours, app naming, and install-screen identity.`,
