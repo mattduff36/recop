@@ -31,6 +31,7 @@ import {
   Receipt,
   SlidersHorizontal,
   PackageSearch,
+  NotebookPen,
   LucideIcon
 } from 'lucide-react';
 import { ModuleName } from '@/types/roles';
@@ -73,6 +74,20 @@ const baseEmployeeNavItems: NavItem[] = [
     label: 'Timesheets', 
     icon: FileText, 
     module: 'timesheets',
+    category: 'employee'
+  },
+  {
+    href: '/shift-reports',
+    label: 'Shift Reports',
+    icon: FileText,
+    module: 'shift-reports',
+    category: 'employee'
+  },
+  {
+    href: '/daily-site-diary',
+    label: 'Daily Site Diary',
+    icon: NotebookPen,
+    module: 'daily-site-diary',
     category: 'employee'
   },
   { 

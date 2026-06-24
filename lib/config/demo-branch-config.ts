@@ -64,6 +64,8 @@ export const demoBranchConfig: DemoBranchConfig = {
 },
   navigationPriorityHrefs: [
   "/timesheets",
+  "/shift-reports",
+  "/daily-site-diary",
   "/approvals",
   "/van-inspections",
   "/plant-inspections",

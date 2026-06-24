@@ -82,6 +82,8 @@ export interface TeamPermissionMatrixResponse {
 
 export const STANDARD_MODULES: ModuleName[] = [
   'timesheets',
+  'shift-reports',
+  'daily-site-diary',
   'inspections',
   'plant-inspections',
   'hgv-inspections',
@@ -109,6 +111,8 @@ export const MANAGEMENT_MODULES: ModuleName[] = [
 
 export const MODULE_SHORT_NAMES: Record<ModuleName, string> = {
   'timesheets': 'Timesheets',
+  'shift-reports': 'Shift Reports',
+  'daily-site-diary': 'Site Diary',
   'inspections': 'Van Checks',
   'plant-inspections': 'Plant Checks',
   'hgv-inspections': 'HGV Checks',
@@ -133,6 +137,8 @@ export const MODULE_SHORT_NAMES: Record<ModuleName, string> = {
 
 export const MODULE_CSS_VAR: Record<ModuleName, string> = {
   'timesheets': '--timesheet-primary',
+  'shift-reports': '--shift-report-primary',
+  'daily-site-diary': '--daily-site-diary-primary',
   'inspections': '--inspection-primary',
   'plant-inspections': '--plant-inspection-primary',
   'hgv-inspections': '--inspection-primary',
@@ -158,6 +164,8 @@ export const MODULE_CSS_VAR: Record<ModuleName, string> = {
 // All available modules in the system
 export type ModuleName =
   | 'timesheets'
+  | 'shift-reports'
+  | 'daily-site-diary'
   | 'inspections'
   | 'plant-inspections'
   | 'hgv-inspections'
@@ -181,6 +189,8 @@ export type ModuleName =
 
 export const ALL_MODULES: ModuleName[] = [
   'timesheets',
+  'shift-reports',
+  'daily-site-diary',
   'inspections',
   'plant-inspections',
   'hgv-inspections',
@@ -205,6 +215,8 @@ export const ALL_MODULES: ModuleName[] = [
 
 export const MODULE_DISPLAY_NAMES: Record<ModuleName, string> = {
   'timesheets': 'Timesheets',
+  'shift-reports': 'Shift Reports',
+  'daily-site-diary': 'Daily Site Diary',
   'inspections': 'Van Daily Checks',
   'plant-inspections': 'Plant Daily Checks',
   'hgv-inspections': 'HGV Daily Checks',
@@ -229,6 +241,8 @@ export const MODULE_DISPLAY_NAMES: Record<ModuleName, string> = {
 
 export const MODULE_DESCRIPTIONS: Record<ModuleName, string> = {
   'timesheets': 'Create and submit timesheets',
+  'shift-reports': 'Create and submit daily shift reports',
+  'daily-site-diary': 'Create and submit daily site diary entries',
   'inspections': 'Perform van daily checks',
   'plant-inspections': 'Perform plant machinery daily checks',
   'hgv-inspections': 'Perform daily HGV checks',

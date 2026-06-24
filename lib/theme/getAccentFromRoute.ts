@@ -7,6 +7,8 @@
 
 export type AccentType = 
   | 'timesheets'
+  | 'shift-reports'
+  | 'daily-site-diary'
   | 'inspections'
   | 'rams'
   | 'absence'
@@ -32,6 +34,8 @@ export function getAccentFromRoute(
 
   // Employee module routes → module colors
   if (path.startsWith('/timesheets')) return 'timesheets';
+  if (path.startsWith('/shift-reports')) return 'shift-reports';
+  if (path.startsWith('/daily-site-diary')) return 'daily-site-diary';
   if (path.startsWith('/van-inspections')) return 'inspections';
   if (path.startsWith('/hgv-inspections')) return 'inspections';
   if (path.startsWith('/projects')) return 'rams';

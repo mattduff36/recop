@@ -26,6 +26,24 @@ export const MODULE_PAGES: ModulePage[] = [
     ],
   },
   {
+    module: 'shift-reports',
+    displayName: MODULE_DISPLAY_NAMES['shift-reports'],
+    subPages: [
+      { value: 'shift-reports-list', label: 'Shift Reports List' },
+      { value: 'shift-reports-new', label: 'New Shift Report' },
+      { value: 'shift-reports-view', label: 'View/Edit Shift Report' },
+    ],
+  },
+  {
+    module: 'daily-site-diary',
+    displayName: MODULE_DISPLAY_NAMES['daily-site-diary'],
+    subPages: [
+      { value: 'daily-site-diary-list', label: 'Daily Site Diary List' },
+      { value: 'daily-site-diary-new', label: 'New Site Diary' },
+      { value: 'daily-site-diary-view', label: 'View/Edit Site Diary' },
+    ],
+  },
+  {
     module: 'inspections',
     displayName: MODULE_DISPLAY_NAMES.inspections,
     subPages: [
@@ -214,6 +232,16 @@ export function getPageUrl(value: string): string {
     'timesheets-list': '/timesheets',
     'timesheets-new': '/timesheets/new',
     'timesheets-view': '/timesheets/[id]',
+
+    // Shift Reports
+    'shift-reports-list': '/shift-reports',
+    'shift-reports-new': '/shift-reports/new',
+    'shift-reports-view': '/shift-reports/[id]',
+
+    // Daily Site Diary
+    'daily-site-diary-list': '/daily-site-diary',
+    'daily-site-diary-new': '/daily-site-diary/new',
+    'daily-site-diary-view': '/daily-site-diary/[id]',
     
     // Inspections
     'inspections-list': '/van-inspections',

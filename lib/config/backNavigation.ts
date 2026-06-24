@@ -91,6 +91,22 @@ export function getParentHref(
   if (normalizedPath.match(/^\/timesheets\/[^/]+$/)) {
     return '/timesheets';
   }
+
+  // Shift report routes
+  if (normalizedPath === '/shift-reports/new') {
+    return '/shift-reports';
+  }
+  if (normalizedPath.match(/^\/shift-reports\/[^/]+$/)) {
+    return '/shift-reports';
+  }
+
+  // Daily site diary routes
+  if (normalizedPath === '/daily-site-diary/new') {
+    return '/daily-site-diary';
+  }
+  if (normalizedPath.match(/^\/daily-site-diary\/[^/]+$/)) {
+    return '/daily-site-diary';
+  }
   
   // Absence routes
   if (normalizedPath === '/absence/manage') {

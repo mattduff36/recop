@@ -24,6 +24,7 @@
 .DS_Store
 *.pem
 *.bak
+recop.code-workspace
 
 # debug
 npm-debug.log*

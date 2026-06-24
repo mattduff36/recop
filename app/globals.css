@@ -43,6 +43,14 @@
     --timesheet-primary: 210 90% 50%;
     --timesheet-light: 210 100% 96%;
     --timesheet-dark: 210 90% 35%;
+
+    --shift-report-primary: 203 84% 42%;
+    --shift-report-light: 203 100% 95%;
+    --shift-report-dark: 203 84% 30%;
+
+    --daily-site-diary-primary: 168 76% 36%;
+    --daily-site-diary-light: 168 76% 95%;
+    --daily-site-diary-dark: 168 76% 27%;
     
     --inspection-primary: 33 95% 55%;
     --inspection-light: 33 100% 96%;
@@ -131,6 +139,18 @@
     --primary: var(--timesheet-primary);
     --primary-foreground: 210 40% 98%; /* light text for readability */
     --ring: var(--timesheet-primary);
+  }
+
+  [data-accent="shift-reports"] {
+    --primary: var(--shift-report-primary);
+    --primary-foreground: 210 40% 98%;
+    --ring: var(--shift-report-primary);
+  }
+
+  [data-accent="daily-site-diary"] {
+    --primary: var(--daily-site-diary-primary);
+    --primary-foreground: 210 40% 98%;
+    --ring: var(--daily-site-diary-primary);
   }
 
   [data-accent="inspections"] {
@@ -255,6 +275,20 @@
   .bg-timesheet-dark { background-color: hsl(var(--timesheet-dark)); }
   .text-timesheet { color: hsl(var(--timesheet-primary)); }
   .border-timesheet { border-color: hsl(var(--timesheet-primary)); }
+
+  /* Shift Reports */
+  .bg-shift-report { background-color: hsl(var(--shift-report-primary)); }
+  .bg-shift-report-light { background-color: hsl(var(--shift-report-light)); }
+  .bg-shift-report-dark { background-color: hsl(var(--shift-report-dark)); }
+  .text-shift-report { color: hsl(var(--shift-report-primary)); }
+  .border-shift-report { border-color: hsl(var(--shift-report-primary)); }
+
+  /* Daily Site Diary */
+  .bg-daily-site-diary { background-color: hsl(var(--daily-site-diary-primary)); }
+  .bg-daily-site-diary-light { background-color: hsl(var(--daily-site-diary-light)); }
+  .bg-daily-site-diary-dark { background-color: hsl(var(--daily-site-diary-dark)); }
+  .text-daily-site-diary { color: hsl(var(--daily-site-diary-primary)); }
+  .border-daily-site-diary { border-color: hsl(var(--daily-site-diary-primary)); }
   
   /* Inspection */
   .bg-inspection { background-color: hsl(var(--inspection-primary)); }

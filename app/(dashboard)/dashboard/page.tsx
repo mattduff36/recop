@@ -438,6 +438,8 @@ export default function DashboardPage() {
                 // Map form IDs to module names for permission checking
                 const moduleMap: Record<string, ModuleName> = {
                   'timesheet': 'timesheets',
+                  'shift-report': 'shift-reports',
+                  'daily-site-diary': 'daily-site-diary',
                   'inspection': 'inspections',
                   'plant-inspection': 'plant-inspections',
                   'hgv-inspection': 'hgv-inspections',
