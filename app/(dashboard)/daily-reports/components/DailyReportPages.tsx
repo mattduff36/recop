@@ -32,14 +32,14 @@ import type {
   PlantEquipmentRow,
   ProfileSummary,
   ShiftReport,
-  ShiftReportResourceAllocation,
+  ShiftReportActivityRow,
   SiteDiaryResourceAllocation,
   VisitorRow,
 } from '@/types/daily-reports';
 import {
   createEmptyDelayInstruction,
   createEmptyPlantEquipment,
-  createEmptyShiftResource,
+  createEmptyShiftActivity,
   createEmptySiteDiaryResource,
   createEmptyVisitor,
   getDailyReportConfig,
@@ -200,6 +200,12 @@ async function fetchReportChildren(db: DailyReportDb, config: DailyReportModuleC
   };
 }
 
+async function fetchShiftActivityRows(db: DailyReportDb, reportId: string): Promise<ShiftReportActivityRow[]> {
+  const { data, error } = await db.from('shift_report_activity_rows').select('*').eq('report_id', reportId).order('display_order', { ascending: true });
+  if (error) throw error;
+  return (data || []) as ShiftReportActivityRow[];
+}
+
 async function fetchReport(db: DailyReportDb, config: DailyReportModuleConfig, id: string): Promise<ReportRow> {
   const selectProfile =
     config.module === 'shift-reports'
@@ -208,17 +214,15 @@ async function fetchReport(db: DailyReportDb, config: DailyReportModuleConfig, i
   const { data, error } = await db.from(config.tableName).select(selectProfile).eq('id', id).single();
   if (error) throw error;
 
-  const children = await fetchReportChildren(db, config, id);
   if (config.module === 'shift-reports') {
+    const activityRows = await fetchShiftActivityRows(db, id);
     return {
       ...(data as ShiftReport),
-      resource_allocations: children.resource_allocations as ShiftReportResourceAllocation[],
-      plant_equipment: children.plant_equipment as PlantEquipmentRow[],
-      visitors: children.visitors as VisitorRow[],
-      delay_instructions: children.delay_instructions as DelayInstructionRow[],
+      activity_rows: activityRows,
     };
   }
 
+  const children = await fetchReportChildren(db, config, id);
   return {
     ...(data as DailySiteDiary),
     resource_allocations: children.resource_allocations as SiteDiaryResourceAllocation[],
@@ -304,8 +308,15 @@ function reportToFormState(module: DailyReportModule, report: ReportRow): Report
   };
 }
 
-function normalizeShiftResources(rows?: ShiftReportResourceAllocation[]): ShiftReportResourceAllocation[] {
-  return rows?.length ? rows : [createEmptyShiftResource(0), createEmptyShiftResource(1), createEmptyShiftResource(2)];
+function normalizeShiftActivityRows(rows?: ShiftReportActivityRow[]): ShiftReportActivityRow[] {
+  return rows?.length ? rows : [createEmptyShiftActivity(0), createEmptyShiftActivity(1), createEmptyShiftActivity(2)];
+}
+
+function summarizeShiftActivityRows(rows: ShiftReportActivityRow[]): string {
+  return rows
+    .map((row) => row.activity_description.trim())
+    .filter(Boolean)
+    .join('\n');
 }
 
 function normalizeDiaryResources(rows?: SiteDiaryResourceAllocation[]): SiteDiaryResourceAllocation[] {
@@ -585,7 +596,7 @@ function DailyReportFormContent({ module }: { module: DailyReportModule }) {
   });
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
-  const [shiftResources, setShiftResources] = useState<ShiftReportResourceAllocation[]>(() => normalizeShiftResources());
+  const [shiftActivityRows, setShiftActivityRows] = useState<ShiftReportActivityRow[]>(() => normalizeShiftActivityRows());
   const [diaryResources, setDiaryResources] = useState<SiteDiaryResourceAllocation[]>(() => normalizeDiaryResources());
   const [plantRows, setPlantRows] = useState<PlantEquipmentRow[]>(() => normalizeRows(undefined, createEmptyPlantEquipment));
   const [visitorRows, setVisitorRows] = useState<VisitorRow[]>(() => normalizeRows(undefined, createEmptyVisitor));
@@ -641,7 +652,7 @@ function DailyReportFormContent({ module }: { module: DailyReportModule }) {
         setSelectedEmployeeId(report.user_id);
         setLoadedStatus(report.status);
         setSignatureData(report.signature_data || null);
-        setShiftResources(normalizeShiftResources((report as ShiftReport).resource_allocations));
+        setShiftActivityRows(normalizeShiftActivityRows((report as ShiftReport).activity_rows));
         setDiaryResources(normalizeDiaryResources((report as DailySiteDiary).resource_allocations));
         setPlantRows(normalizeRows(report.plant_equipment, createEmptyPlantEquipment));
         setVisitorRows(normalizeRows(report.visitors, createEmptyVisitor));
@@ -681,7 +692,12 @@ function DailyReportFormContent({ module }: { module: DailyReportModule }) {
       setShowSignatureDialog(true);
       return;
     }
-    if (status === 'submitted' && !form.activity_description.trim()) {
+    const shiftActivitySummary = summarizeShiftActivityRows(shiftActivityRows);
+    if (status === 'submitted' && isShiftReport(module) && !shiftActivitySummary) {
+      toast.error('Add at least one activity row before submitting.');
+      return;
+    }
+    if (status === 'submitted' && !isShiftReport(module) && !form.activity_description.trim()) {
       toast.error('Activity description is required before submitting.');
       return;
     }
@@ -690,7 +706,8 @@ function DailyReportFormContent({ module }: { module: DailyReportModule }) {
     try {
       const shouldSubmit = status === 'submitted';
       const finalSignature = signature || signatureData;
-      const headerPayload = makeHeaderPayload(module, selectedEmployeeId, form, shouldSubmit ? 'draft' : status, shouldSubmit ? null : finalSignature);
+      const headerForm = isShiftReport(module) ? { ...form, activity_description: shiftActivitySummary } : form;
+      const headerPayload = makeHeaderPayload(module, selectedEmployeeId, headerForm, shouldSubmit ? 'draft' : status, shouldSubmit ? null : finalSignature);
       let reportId = existingId;
 
       if (existingId) {
@@ -703,12 +720,16 @@ function DailyReportFormContent({ module }: { module: DailyReportModule }) {
       }
 
       if (!reportId) throw new Error('Report ID was not returned.');
-      await saveChildRows(db, config, reportId, {
-        resources: isShiftReport(module) ? shiftResources : diaryResources,
-        plantRows,
-        visitorRows,
-        delayRows,
-      });
+      if (isShiftReport(module)) {
+        await saveShiftActivityRows(db, reportId, shiftActivityRows);
+      } else {
+        await saveChildRows(db, config, reportId, {
+          resources: diaryResources,
+          plantRows,
+          visitorRows,
+          delayRows,
+        });
+      }
 
       if (shouldSubmit) {
         const submitPayload = {
@@ -786,7 +807,7 @@ function DailyReportFormContent({ module }: { module: DailyReportModule }) {
           <Card>
             <CardHeader>
               <CardTitle>Times & Activity</CardTitle>
-              <CardDescription>Record daily time and the activity description used on the PDF.</CardDescription>
+              <CardDescription>{isShiftReport(module) ? 'Record travel, on-site times and total durations for the client shift report.' : 'Record daily time and the activity description used on the PDF.'}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {isShiftReport(module) ? (
@@ -811,42 +832,47 @@ function DailyReportFormContent({ module }: { module: DailyReportModule }) {
               {!isShiftReport(module) ? (
                 <Field label="Fatigue Hours" value={form.fatigue_hours} onChange={(value) => updateForm('fatigue_hours', value)} type="number" disabled={!canEditExisting} />
               ) : null}
-              <div className="space-y-2">
-                <Label>{isShiftReport(module) ? 'Activity & Description of Works' : 'Activity & Description'}</Label>
-                <Textarea value={form.activity_description} onChange={(event) => updateForm('activity_description', event.target.value)} disabled={!canEditExisting} rows={5} />
-              </div>
-              <div className="space-y-2">
-                <Label>Comments</Label>
-                <Textarea value={form.comments} onChange={(event) => updateForm('comments', event.target.value)} disabled={!canEditExisting} rows={3} />
-              </div>
+              {!isShiftReport(module) ? (
+                <>
+                  <div className="space-y-2">
+                    <Label>Activity & Description</Label>
+                    <Textarea value={form.activity_description} onChange={(event) => updateForm('activity_description', event.target.value)} disabled={!canEditExisting} rows={5} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Comments</Label>
+                    <Textarea value={form.comments} onChange={(event) => updateForm('comments', event.target.value)} disabled={!canEditExisting} rows={3} />
+                  </div>
+                </>
+              ) : null}
             </CardContent>
           </Card>
 
           {isShiftReport(module) ? (
-            <ShiftResourceEditor rows={shiftResources} setRows={setShiftResources} disabled={!canEditExisting} />
+            <ShiftActivityTimelineEditor rows={shiftActivityRows} setRows={setShiftActivityRows} disabled={!canEditExisting} />
           ) : (
-            <SiteDiaryResourceEditor rows={diaryResources} setRows={setDiaryResources} disabled={!canEditExisting} />
+            <>
+              <SiteDiaryResourceEditor rows={diaryResources} setRows={setDiaryResources} disabled={!canEditExisting} />
+              <SimpleRowsEditor
+                title="Plant & Equipment On Site"
+                description="Structured rows for the plant/equipment section of the PDF."
+                rows={plantRows}
+                setRows={setPlantRows}
+                disabled={!canEditExisting}
+                addLabel="Add equipment"
+                createRow={createEmptyPlantEquipment}
+              />
+              <VisitorsEditor rows={visitorRows} setRows={setVisitorRows} disabled={!canEditExisting} />
+              <SimpleRowsEditor
+                title="Delays / Instructions"
+                description="Capture item descriptions and comments for the report."
+                rows={delayRows}
+                setRows={setDelayRows}
+                disabled={!canEditExisting}
+                addLabel="Add item"
+                createRow={createEmptyDelayInstruction}
+              />
+            </>
           )}
-
-          <SimpleRowsEditor
-            title="Plant & Equipment On Site"
-            description="Structured rows for the plant/equipment section of the PDF."
-            rows={plantRows}
-            setRows={setPlantRows}
-            disabled={!canEditExisting}
-            addLabel="Add equipment"
-            createRow={createEmptyPlantEquipment}
-          />
-          <VisitorsEditor rows={visitorRows} setRows={setVisitorRows} disabled={!canEditExisting} />
-          <SimpleRowsEditor
-            title={isShiftReport(module) ? 'Delays / Instructions / Non-Contract Works' : 'Delays / Instructions'}
-            description="Capture item descriptions and comments for the report."
-            rows={delayRows}
-            setRows={setDelayRows}
-            disabled={!canEditExisting}
-            addLabel="Add item"
-            createRow={createEmptyDelayInstruction}
-          />
 
           {!isShiftReport(module) ? (
             <Card>
@@ -909,12 +935,32 @@ function DailyReportFormContent({ module }: { module: DailyReportModule }) {
   );
 }
 
+async function saveShiftActivityRows(db: DailyReportDb, reportId: string, rows: ShiftReportActivityRow[]) {
+  const deleteResult = await db.from('shift_report_activity_rows').delete().eq('report_id', reportId);
+  if (deleteResult.error) throw deleteResult.error;
+
+  const activityRows = rows
+    .filter((row) => row.activity_description.trim() || Number(row.duration_hours || 0) > 0)
+    .map(({ id: _id, ...row }, index) => ({
+      ...row,
+      activity_description: row.activity_description.trim() || null,
+      duration_hours: row.duration_hours || null,
+      display_order: index,
+      report_id: reportId,
+    }));
+
+  if (!activityRows.length) return;
+
+  const insertResult = await db.from('shift_report_activity_rows').insert(activityRows);
+  if (insertResult.error) throw insertResult.error;
+}
+
 async function saveChildRows(
   db: DailyReportDb,
   config: DailyReportModuleConfig,
   reportId: string,
   rows: {
-    resources: Array<ShiftReportResourceAllocation | SiteDiaryResourceAllocation>;
+    resources: SiteDiaryResourceAllocation[];
     plantRows: PlantEquipmentRow[];
     visitorRows: VisitorRow[];
     delayRows: DelayInstructionRow[];
@@ -976,42 +1022,53 @@ function Field({
   );
 }
 
-function ShiftResourceEditor({
+function ShiftActivityTimelineEditor({
   rows,
   setRows,
   disabled,
 }: {
-  rows: ShiftReportResourceAllocation[];
-  setRows: (rows: ShiftReportResourceAllocation[]) => void;
+  rows: ShiftReportActivityRow[];
+  setRows: (rows: ShiftReportActivityRow[]) => void;
   disabled: boolean;
 }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Resource Allocation (Hrs)</CardTitle>
-        <CardDescription>Labour and subcontractor hours for the shift report.</CardDescription>
+        <CardTitle>Activity Timeline</CardTitle>
+        <CardDescription>Record each piece of work in order with a decimal duration. These rows form the main table on the client shift report PDF.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         {rows.map((row, index) => (
-          <div key={index} className="grid gap-3 rounded-lg border border-slate-700 p-3 md:grid-cols-4">
-            <ResourceField label="Name" value={row.name} onChange={(value) => updateArrayRow(rows, setRows, index, 'name', value)} disabled={disabled} />
-            <ResourceField label="Company" value={row.company} onChange={(value) => updateArrayRow(rows, setRows, index, 'company', value)} disabled={disabled} />
-            <ResourceField label="Grade" value={row.grade} onChange={(value) => updateArrayRow(rows, setRows, index, 'grade', value)} disabled={disabled} />
-            <ResourceNumber label="Travel" value={row.travel_hours} onChange={(value) => updateArrayRow(rows, setRows, index, 'travel_hours', value)} disabled={disabled} />
-            <ResourceNumber label="Basic" value={row.basic_hours} onChange={(value) => updateArrayRow(rows, setRows, index, 'basic_hours', value)} disabled={disabled} />
-            <ResourceNumber label="1/3" value={row.one_third_hours} onChange={(value) => updateArrayRow(rows, setRows, index, 'one_third_hours', value)} disabled={disabled} />
-            <ResourceNumber label="1/2" value={row.half_hours} onChange={(value) => updateArrayRow(rows, setRows, index, 'half_hours', value)} disabled={disabled} />
-            <ResourceNumber label="Double" value={row.double_hours} onChange={(value) => updateArrayRow(rows, setRows, index, 'double_hours', value)} disabled={disabled} />
-            <ResourceNumber label="Expenses" value={row.expenses} onChange={(value) => updateArrayRow(rows, setRows, index, 'expenses', value)} disabled={disabled} />
-            <ResourceNumber label="Bonus" value={row.bonus} onChange={(value) => updateArrayRow(rows, setRows, index, 'bonus', value)} disabled={disabled} />
-            <label className="flex items-center gap-2 pt-7 text-sm">
-              <input type="checkbox" checked={row.lodge_allowance} onChange={(event) => updateArrayRow(rows, setRows, index, 'lodge_allowance', event.target.checked)} disabled={disabled} />
-              Lodge Allowance
-            </label>
+          <div key={index} className="grid gap-3 rounded-lg border border-slate-700 p-3 md:grid-cols-[1fr_150px_auto]">
+            <div className="space-y-2">
+              <Label>Activity & Description of Works</Label>
+              <Textarea
+                value={row.activity_description}
+                onChange={(event) => updateArrayRow(rows, setRows, index, 'activity_description', event.target.value)}
+                disabled={disabled}
+                rows={2}
+              />
+            </div>
+            <ResourceNumber
+              label="Duration (hrs)"
+              value={row.duration_hours || 0}
+              onChange={(value) => updateArrayRow(rows, setRows, index, 'duration_hours', value || null)}
+              disabled={disabled}
+            />
+            <div className="flex items-end">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setRows(rows.length > 1 ? rows.filter((_, rowIndex) => rowIndex !== index) : [createEmptyShiftActivity(0)])}
+                disabled={disabled}
+              >
+                Remove
+              </Button>
+            </div>
           </div>
         ))}
-        <Button type="button" variant="outline" onClick={() => setRows([...rows, createEmptyShiftResource(rows.length)])} disabled={disabled}>
-          Add resource
+        <Button type="button" variant="outline" onClick={() => setRows([...rows, createEmptyShiftActivity(rows.length)])} disabled={disabled}>
+          Add activity row
         </Button>
       </CardContent>
     </Card>
@@ -1276,27 +1333,32 @@ export function DailyReportDetailPage({ module, id }: { module: DailyReportModul
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Activity</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="whitespace-pre-wrap rounded-md border border-slate-700 bg-slate-900 p-4 text-sm">
-                {report.activity_description || 'No activity description recorded.'}
-              </div>
-              {report.comments ? (
-                <div>
-                  <h3 className="mb-2 text-sm font-semibold">Comments</h3>
-                  <div className="whitespace-pre-wrap rounded-md border border-slate-700 bg-slate-900 p-4 text-sm">{report.comments}</div>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-
-          <ReadOnlyRows title="Resource Allocation" rows={report.resource_allocations || []} />
-          <ReadOnlyRows title="Plant & Equipment" rows={report.plant_equipment || []} />
-          <ReadOnlyRows title="Visitors" rows={report.visitors || []} />
-          <ReadOnlyRows title="Delays / Instructions" rows={report.delay_instructions || []} />
+          {isShiftReport(module) ? (
+            <ReadOnlyShiftActivityRows rows={shift.activity_rows || []} />
+          ) : (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Activity</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="whitespace-pre-wrap rounded-md border border-slate-700 bg-slate-900 p-4 text-sm">
+                    {report.activity_description || 'No activity description recorded.'}
+                  </div>
+                  {report.comments ? (
+                    <div>
+                      <h3 className="mb-2 text-sm font-semibold">Comments</h3>
+                      <div className="whitespace-pre-wrap rounded-md border border-slate-700 bg-slate-900 p-4 text-sm">{report.comments}</div>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+              <ReadOnlyRows title="Resource Allocation" rows={report.resource_allocations || []} />
+              <ReadOnlyRows title="Plant & Equipment" rows={report.plant_equipment || []} />
+              <ReadOnlyRows title="Visitors" rows={report.visitors || []} />
+              <ReadOnlyRows title="Delays / Instructions" rows={report.delay_instructions || []} />
+            </>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -1372,6 +1434,31 @@ function Summary({ label, value }: { label: string; value?: string | number | nu
       <div className="text-xs font-semibold uppercase text-muted-foreground">{label}</div>
       <div className="text-sm text-foreground">{value || '-'}</div>
     </div>
+  );
+}
+
+function ReadOnlyShiftActivityRows({ rows }: { rows: ShiftReportActivityRow[] }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Activity Timeline</CardTitle>
+        <CardDescription>Client-style shift report activity rows and decimal durations.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {rows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No activity rows recorded.</p>
+        ) : (
+          <div className="space-y-2">
+            {rows.map((row, index) => (
+              <div key={row.id || index} className="grid gap-3 rounded-md border border-slate-700 bg-slate-900 p-3 text-sm md:grid-cols-[1fr_140px]">
+                <div className="whitespace-pre-wrap">{row.activity_description || '-'}</div>
+                <Summary label="Duration" value={row.duration_hours ? `${row.duration_hours} hrs` : '-'} />
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

@@ -5,7 +5,7 @@ import { getProfileWithRole } from '@/lib/utils/permissions';
 import { logServerError } from '@/lib/utils/server-error-logger';
 import { loadTemplateLogoDataUrl } from '@/lib/pdf/template-logo';
 import { ShiftReportPDF } from '@/lib/pdf/shift-report-pdf';
-import type { DelayInstructionRow, PlantEquipmentRow, ShiftReport, ShiftReportResourceAllocation, VisitorRow } from '@/types/daily-reports';
+import type { ShiftReport, ShiftReportActivityRow } from '@/types/daily-reports';
 
 type DbClient = {
   from: (table: string) => QueryBuilder;
@@ -62,31 +62,22 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const [employeeResult, reviewerResult, resources, plant, visitors, delays] = await Promise.all([
+    const [employeeResult, reviewerResult, activityRows] = await Promise.all([
       db.from('profiles').select('full_name').eq('id', typedReport.user_id).single(),
       typedReport.reviewed_by
         ? db.from('profiles').select('full_name').eq('id', typedReport.reviewed_by).single()
         : Promise.resolve({ data: null, error: null }),
-      db.from('shift_report_resource_allocations').select('*').eq('report_id', id).order('display_order', { ascending: true }),
-      db.from('shift_report_plant_equipment').select('*').eq('report_id', id).order('display_order', { ascending: true }),
-      db.from('shift_report_visitors').select('*').eq('report_id', id).order('display_order', { ascending: true }),
-      db.from('shift_report_delay_instructions').select('*').eq('report_id', id).order('display_order', { ascending: true }),
+      db.from('shift_report_activity_rows').select('*').eq('report_id', id).order('display_order', { ascending: true }),
     ]);
 
-    if (resources.error) throw resources.error;
-    if (plant.error) throw plant.error;
-    if (visitors.error) throw visitors.error;
-    if (delays.error) throw delays.error;
+    if (activityRows.error) throw activityRows.error;
 
     const logoSrc = await loadTemplateLogoDataUrl({ preferPdfLogo: true });
     const stream = await renderToStream(
       ShiftReportPDF({
         report: {
           ...typedReport,
-          resource_allocations: (resources.data || []) as ShiftReportResourceAllocation[],
-          plant_equipment: (plant.data || []) as PlantEquipmentRow[],
-          visitors: (visitors.data || []) as VisitorRow[],
-          delay_instructions: (delays.data || []) as DelayInstructionRow[],
+          activity_rows: (activityRows.data || []) as ShiftReportActivityRow[],
         },
         employeeName: (employeeResult.data as { full_name?: string } | null)?.full_name || null,
         approvedByName: (reviewerResult.data as { full_name?: string } | null)?.full_name || null,

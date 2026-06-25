@@ -25,6 +25,13 @@ export interface ShiftReportResourceAllocation {
   bonus: number;
 }
 
+export interface ShiftReportActivityRow {
+  id?: string;
+  display_order: number;
+  activity_description: string;
+  duration_hours: number | null;
+}
+
 export interface SiteDiaryResourceAllocation {
   id?: string;
   display_order: number;
@@ -93,6 +100,7 @@ export interface ShiftReport {
   created_at: string;
   updated_at: string;
   profile?: ProfileSummary | null;
+  activity_rows?: ShiftReportActivityRow[];
   resource_allocations?: ShiftReportResourceAllocation[];
   plant_equipment?: PlantEquipmentRow[];
   visitors?: VisitorRow[];
@@ -145,6 +153,7 @@ export interface DailyReportModuleConfig {
   basePath: string;
   tableName: 'shift_reports' | 'daily_site_diaries';
   parentIdColumn: 'report_id' | 'diary_id';
+  activityTable?: 'shift_report_activity_rows';
   resourceTable: 'shift_report_resource_allocations' | 'daily_site_diary_resource_allocations';
   plantTable: 'shift_report_plant_equipment' | 'daily_site_diary_plant_equipment';
   visitorsTable: 'shift_report_visitors' | 'daily_site_diary_visitors';
@@ -161,6 +170,7 @@ export const SHIFT_REPORT_CONFIG: DailyReportModuleConfig = {
   basePath: '/shift-reports',
   tableName: 'shift_reports',
   parentIdColumn: 'report_id',
+  activityTable: 'shift_report_activity_rows',
   resourceTable: 'shift_report_resource_allocations',
   plantTable: 'shift_report_plant_equipment',
   visitorsTable: 'shift_report_visitors',
@@ -202,6 +212,14 @@ export function createEmptyShiftResource(displayOrder: number): ShiftReportResou
     lodge_allowance: false,
     expenses: 0,
     bonus: 0,
+  };
+}
+
+export function createEmptyShiftActivity(displayOrder: number): ShiftReportActivityRow {
+  return {
+    display_order: displayOrder,
+    activity_description: '',
+    duration_hours: null,
   };
 }
 
